@@ -1,30 +1,64 @@
 <script lang="ts">
-    import { Router } from "svelte-navigator";
-    import Navbar from "./components/Navbar.svelte";
+    import { Route, Router } from "svelte-navigator";
     import RouteTransition from "./components/RouteTransition.svelte";
+    import Navbar from "./components/Navbar.svelte";
+
     import Home from "./routes/Home.svelte";
+    import NotFound from "./routes/PageNotFound.svelte";
+
     import Login from "./routes/Login.svelte";
     import Logout from "./routes/Logout.svelte";
-    import NotFound from "./routes/PageNotFound.svelte";
+
+    import LicenseIssuers from "./routes/LicenseIssuers.svelte";
+    import LicenseIssuer from "./routes/LicenseIssuer.svelte";
+    import License from "./routes/License.svelte";
+    import LicenseSession from "./routes/LicenseSession.svelte";
 </script>
 
 <Router>
     <header>
         <Navbar />
     </header>
+
     <main class="mt-3">
-        <RouteTransition path="/">
+        <Route path="/">
             <Home />
-        </RouteTransition>
+        </Route>
         <RouteTransition path="/login">
             <Login />
         </RouteTransition>
-        <RouteTransition path="/logout">
+        <Route path="/logout">
             <Logout />
-        </RouteTransition>
+        </Route>
 
-        <RouteTransition path="*">
+        <Route path="/license-issuers">
+            <LicenseIssuers />
+        </Route>
+        <Route path="/license-issuers/:licenseIssuerID" let:params>
+            <LicenseIssuer licenseIssuerID={+params.licenseIssuerID} />
+        </Route>
+        <Route
+            path="/license-issuers/:licenseIssuerID/licenses/:licenseID"
+            let:params
+        >
+            <License
+                licenseIssuerID={+params.licenseIssuerID}
+                licenseID={params.licenseID}
+            />
+        </Route>
+        <Route
+            path="/license-issuers/:licenseIssuerID/licenses/:licenseID/sessions/:licenseSessionID"
+            let:params
+        >
+            <LicenseSession
+                licenseIssuerID={+params.licenseIssuerID}
+                licenseID={params.licenseID}
+                licenseSessionID={params.licenseSessionID}
+            />
+        </Route>
+
+        <Route path="*">
             <NotFound />
-        </RouteTransition>
+        </Route>
     </main>
 </Router>

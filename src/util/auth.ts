@@ -1,14 +1,24 @@
-import { derived, writable } from "svelte/store";
+import { navigate } from "svelte-navigator";
+import { derived, get } from "svelte/store";
 import { baseUrl } from "./const";
+import { localStorageWritable } from "./localStorage";
 
-const token = writable(localStorage.getItem("token") || "");
-token.subscribe((token) => {
-    localStorage.setItem("token", token);
+type AuthData = {
+    token: string;
+    licenseIssuerID: number;
+};
+
+const authData = localStorageWritable<AuthData>("authData", {
+    licenseIssuerID: -1,
+    token: "",
 });
 
-export const loggedIn = derived(token, ($token) => {
-    return $token !== "";
-});
+export const loggedIn = derived(authData, (data) => data.token !== "");
+export const issuerID = derived(authData, (data) => data.licenseIssuerID);
+export const isPrivileged = derived(
+    authData,
+    (data) => data.licenseIssuerID === 0
+);
 
 export const login = async (
     username: string,
@@ -24,16 +34,44 @@ export const login = async (
             password,
         }),
     });
-
     if (!res.ok) {
         return false;
     }
 
-    const body = await res.json();
-    token.set(body.token);
+    const json = await res.json();
+    authData.set(json);
     return true;
 };
 
 export const logout = () => {
-    token.set("");
+    authData.set({
+        licenseIssuerID: -1,
+        token: "",
+    });
+};
+
+export const authFetch = async (
+    input: RequestInfo,
+    init?: RequestInit
+): Promise<Response> => {
+    const token = get(authData).token;
+    const res = await fetch(input, {
+        ...init,
+        headers: {
+            Authorization: `Bearer ${token}`,
+            ...init?.headers,
+        },
+    });
+    switch (res.status) {
+        case 401: {
+            logout();
+            navigate("/login");
+            break;
+        }
+        case 403: {
+            navigate("/");
+            break;
+        }
+    }
+    return res;
 };

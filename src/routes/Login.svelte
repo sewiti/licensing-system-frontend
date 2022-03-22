@@ -20,23 +20,14 @@
     import { get, writable } from "svelte/store";
     import { onMount } from "svelte";
     import { brand } from "../util/const";
+    import { passwordValidator, usernameValidator } from "../util/validator";
 
     const focus = useFocus();
     const errorMsg = writable("");
     let loading = false;
 
-    const username = newField(
-        "",
-        yup
-            .string()
-            .required("Username is required")
-            .min(3, (v) => `Username must be at least ${v.min} characters`)
-            .max(64, (v) => `Username must be at most ${v.max} characters`)
-    );
-    const password = newField(
-        "",
-        yup.string().required("Password is required")
-    );
+    const username = newField("", usernameValidator);
+    const password = newField("", passwordValidator);
 
     const onSubmit = async (event: SubmitEvent) => {
         event.preventDefault();

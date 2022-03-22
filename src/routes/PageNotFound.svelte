@@ -2,12 +2,7 @@
     import { Container } from "sveltestrap";
     import { navigate, useFocus } from "svelte-navigator";
     import { brand } from "../util/const";
-
     const focus = useFocus();
-    const goHome = (event: MouseEvent) => {
-        event.preventDefault();
-        navigate("/");
-    };
 </script>
 
 <svelte:head>
@@ -19,7 +14,7 @@
     <a
         href="/"
         class="btn btn-outline-primary btn-sm mt-2"
-        on:click={goHome}
+        on:click={() => navigate("/")}
         use:focus
     >
         Go home
