@@ -46,6 +46,25 @@ export const fetchLicenseSession = async (
     return parseLicenseSession(json);
 };
 
+export const deleteLicenseSession = async (
+    licenseIssuerID: number,
+    licenseID: string,
+    licenseSessionID: string
+): Promise<boolean> => {
+    const _licenseID = licenseID.replace("/", "_").replace("+", "-");
+    const _licenseSessionID = licenseSessionID
+        .replace("/", "_")
+        .replace("+", "-");
+
+    const res = await authFetch(
+        `${baseUrl}/api/license-issuers/${licenseIssuerID}/licenses/${_licenseID}/sessions/${_licenseSessionID}`,
+        {
+            method: "DELETE",
+        }
+    );
+    return res.ok;
+};
+
 const parseLicenseSession = (json: any): LicenseSession => {
     return {
         ClientID: json.csid,

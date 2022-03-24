@@ -1,21 +1,6 @@
 <script lang="ts">
     import { navigate } from "svelte-navigator";
-    import {
-        Button,
-        Container,
-        Table,
-        Tooltip,
-        Badge,
-        Modal,
-        ModalHeader,
-        ModalBody,
-        ModalFooter,
-        Form,
-        FormGroup,
-        Label,
-        Col,
-        Row,
-    } from "sveltestrap";
+    import { Button, Container, Table, Tooltip, Col, Row } from "sveltestrap";
     import { fetchLicenses, License } from "../util/license";
     import { fetchLicenseIssuer } from "../util/licenseIssuer";
     import { licenseIssuer } from "../util/state";
@@ -24,16 +9,18 @@
     import Person from "svelte-bootstrap-icons/lib/Person";
     import PencilFill from "svelte-bootstrap-icons/lib/PencilFill";
     import ShieldShaded from "svelte-bootstrap-icons/lib/ShieldShaded";
-    import { newField } from "../util/field";
-    import { usernameValidator } from "../util/validator";
     import LicenseIssuerEdit from "../components/LicenseIssuerEdit.svelte";
-    import { isPrivileged } from "../util/auth";
 
     export let licenseIssuerID: number;
     $: loadData(licenseIssuerID);
     let loading = true;
     let editModal = false;
     let licenses: License[] = [];
+
+    let limitReached: boolean;
+    $: limitReached =
+        $licenseIssuer.MaxLicenses > 0 &&
+        licenses.length >= $licenseIssuer.MaxLicenses;
 
     const loadData = async (licenseIssuerID: number) => {
         loading = true;
@@ -51,18 +38,10 @@
         const _licenseID = licenseID.replace("/", "_").replace("+", "-");
         navigate(`/license-issuers/${licenseIssuerID}/licenses/${_licenseID}`);
     };
-    const onClickEdit = (event: MouseEvent) => {
-        event.preventDefault();
-        username.reset($licenseIssuer.Username);
-        toggleEditModal();
-    };
     const toggleEditModal = (event?: MouseEvent) => {
         event?.preventDefault();
         editModal = !editModal;
     };
-
-    const active = newField("", usernameValidator);
-    const username = newField("", usernameValidator);
 </script>
 
 <Container md>
@@ -90,7 +69,7 @@
                             outline
                             size="sm"
                             disabled={$licenseIssuer.ID === 0}
-                            on:click={onClickEdit}
+                            on:click={toggleEditModal}
                         >
                             <PencilFill width="1em" height="1em" />
                         </Button>
@@ -107,15 +86,34 @@
                 </div>
             </Col>
             <Col xs="12" sm="6" class="text-end">
-                <Button color="primary" class="d-none d-sm-inline" outline>
+                <Button
+                    color="primary"
+                    class="d-none d-sm-inline"
+                    outline
+                    disabled={limitReached}
+                >
                     New license
                 </Button>
-                <Button color="primary" class="d-block w-100 d-sm-none" outline>
+                <Button
+                    color="primary"
+                    class="d-block w-100 d-sm-none"
+                    outline
+                    disabled={limitReached}
+                >
                     New license
                 </Button>
             </Col>
         </Row>
-        <h4 class="mt-3">Licenses</h4>
+        <div class="mt-3 mb-1 d-flex align-items-end justify-content-between">
+            <h4 class="mb-0">Licenses</h4>
+            <span class="align-bottom text-secondary">
+                {licenses.length}
+                /
+                {$licenseIssuer.MaxLicenses <= 0
+                    ? "Unlimited"
+                    : $licenseIssuer.MaxLicenses}
+            </span>
+        </div>
         <Table striped hover class="align-middle">
             <thead>
                 <tr>
@@ -170,9 +168,5 @@
             </tbody>
         </Table>
     </Loader>
-    <LicenseIssuerEdit
-        isOpen={editModal}
-        toggle={toggleEditModal}
-        privileged={$isPrivileged}
-    />
+    <LicenseIssuerEdit isOpen={editModal} toggle={toggleEditModal} />
 </Container>

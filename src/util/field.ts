@@ -1,4 +1,4 @@
-import { get, Writable, writable } from "svelte/store";
+import { get, Readable, Writable, writable } from "svelte/store";
 import { AnySchema, ValidationError } from "yup";
 
 export type Field<T> = {
@@ -12,6 +12,8 @@ export type WritableField<T> = Writable<Field<T>> & {
     validate: () => void;
     reset: (value?: T) => void;
 };
+
+export type ReadableField<T> = Readable<Field<T>>;
 
 export const newField = <T>(value: T, schema?: AnySchema): WritableField<T> => {
     const { subscribe, set, update } = writable(<Field<T>>{
@@ -39,10 +41,10 @@ export const newField = <T>(value: T, schema?: AnySchema): WritableField<T> => {
             return f;
         });
     };
-    const reset = (value?: T) => {
+    const reset = (_value?: T) => {
         set({
-            value: value,
-            valid: false,
+            value: _value === undefined ? value : _value,
+            valid: _value !== undefined,
             invalid: false,
             errors: [],
         });

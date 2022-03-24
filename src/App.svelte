@@ -12,7 +12,6 @@
     import LicenseIssuers from "./routes/LicenseIssuers.svelte";
     import LicenseIssuer from "./routes/LicenseIssuer.svelte";
     import License from "./routes/License.svelte";
-    import LicenseSession from "./routes/LicenseSession.svelte";
 </script>
 
 <Router>
@@ -44,16 +43,6 @@
             <License
                 licenseIssuerID={+params.licenseIssuerID}
                 licenseID={params.licenseID}
-            />
-        </Route>
-        <Route
-            path="/license-issuers/:licenseIssuerID/licenses/:licenseID/sessions/:licenseSessionID"
-            let:params
-        >
-            <LicenseSession
-                licenseIssuerID={+params.licenseIssuerID}
-                licenseID={params.licenseID}
-                licenseSessionID={params.licenseSessionID}
             />
         </Route>
 
