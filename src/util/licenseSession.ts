@@ -1,11 +1,13 @@
 import { authFetch } from "./auth";
 import { baseUrl } from "./const";
+import { urlBase64 } from "./util";
 
 export type LicenseSession = {
     ClientID: string;
     ServerID: string;
     Identifier: string;
     MachineID: string;
+    AppVersion: string;
     Created: Date;
     Expire: Date;
 };
@@ -14,7 +16,7 @@ export const fetchLicenseSessions = async (
     licenseIssuerID: number,
     licenseID: string
 ): Promise<LicenseSession[]> => {
-    const _licenseID = licenseID.replace("/", "_").replace("+", "-");
+    const _licenseID = urlBase64(licenseID);
 
     const res = await authFetch(
         `${baseUrl}/api/license-issuers/${licenseIssuerID}/licenses/${_licenseID}/sessions`
@@ -31,10 +33,8 @@ export const fetchLicenseSession = async (
     licenseID: string,
     licenseSessionID: string
 ): Promise<LicenseSession> => {
-    const _licenseID = licenseID.replace("/", "_").replace("+", "-");
-    const _licenseSessionID = licenseSessionID
-        .replace("/", "_")
-        .replace("+", "-");
+    const _licenseID = urlBase64(licenseID);
+    const _licenseSessionID = urlBase64(licenseSessionID);
 
     const res = await authFetch(
         `${baseUrl}/api/license-issuers/${licenseIssuerID}/licenses/${_licenseID}/sessions/${_licenseSessionID}`
@@ -51,10 +51,8 @@ export const deleteLicenseSession = async (
     licenseID: string,
     licenseSessionID: string
 ): Promise<boolean> => {
-    const _licenseID = licenseID.replace("/", "_").replace("+", "-");
-    const _licenseSessionID = licenseSessionID
-        .replace("/", "_")
-        .replace("+", "-");
+    const _licenseID = urlBase64(licenseID);
+    const _licenseSessionID = urlBase64(licenseSessionID);
 
     const res = await authFetch(
         `${baseUrl}/api/license-issuers/${licenseIssuerID}/licenses/${_licenseID}/sessions/${_licenseSessionID}`,
@@ -71,6 +69,7 @@ const parseLicenseSession = (json: any): LicenseSession => {
         ServerID: json.ssid,
         Identifier: json.identifier,
         MachineID: json.machineID,
+        AppVersion: json.appVersion,
         Created: new Date(json.created),
         Expire: new Date(json.expire),
     };

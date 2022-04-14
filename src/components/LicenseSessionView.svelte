@@ -17,6 +17,7 @@
         fetchLicenseSession,
     } from "../util/licenseSession";
     import { licenseSession } from "../util/state";
+    import { getLang } from "../util/util";
     import Loader from "./Loader.svelte";
 
     const dispatch = createEventDispatcher();
@@ -68,7 +69,7 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} fullscreen="sm">
+<Modal {isOpen} {toggle} fullscreen="sm" scrollable>
     <ModalHeader {toggle}>License session</ModalHeader>
     <ModalBody>
         <Loader {loading}>
@@ -92,6 +93,15 @@
             </FormGroup>
 
             <FormGroup>
+                <Label for="appVersion">App version</Label>
+                <Input
+                    id="appVersion"
+                    value={$licenseSession.AppVersion}
+                    disabled
+                />
+            </FormGroup>
+
+            <FormGroup>
                 <Label for="machineID">Machine ID</Label>
                 <Input
                     id="machineID"
@@ -105,7 +115,7 @@
                 <Label for="expires">Expires</Label>
                 <Input
                     id="expires"
-                    value={$licenseSession.Expire.toLocaleString()}
+                    value={$licenseSession.Expire.toLocaleString(getLang())}
                     disabled
                 />
             </FormGroup>
@@ -114,7 +124,7 @@
                 <Label for="created">Created</Label>
                 <Input
                     id="created"
-                    value={$licenseSession.Created.toLocaleString()}
+                    value={$licenseSession.Created.toLocaleString(getLang())}
                     disabled
                 />
             </FormGroup>
@@ -127,7 +137,7 @@
         <Button color="secondary" outline on:click={toggle}>Close</Button>
     </ModalFooter>
 </Modal>
-<Modal isOpen={isOpenTerminate} toggle={toggleTerminate}>
+<Modal isOpen={isOpenTerminate} toggle={toggleTerminate} scrollable>
     <ModalHeader toggle={toggleTerminate}>
         Are you sure you want to terminate?
     </ModalHeader>

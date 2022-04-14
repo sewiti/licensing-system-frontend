@@ -50,6 +50,26 @@ export const logout = () => {
     });
 };
 
+export const changePasswd = async (
+    licenseIssuerID: number,
+    fields: {
+        oldPassword?: string;
+        newPassword: string;
+    }
+): Promise<{ ok: boolean; status: number }> => {
+    const res = await authFetch(
+        `${baseUrl}/api/change-password/${licenseIssuerID}`,
+        {
+            method: "PATCH",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(fields),
+        }
+    );
+    return { ok: res.ok, status: res.status };
+};
+
 export const authFetch = async (
     input: RequestInfo,
     init?: RequestInit

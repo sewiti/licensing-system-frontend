@@ -1,104 +1,150 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
-    import { navigate } from "svelte-navigator";
-    import { Button, Col, Container, Row, Table } from "sveltestrap";
+    import { onMount } from "svelte";
+    import { useFocus } from "svelte-navigator";
+    import { Button, Col, Container, Row } from "sveltestrap";
+    import { fetchLicenseIssuers, LicenseIssuer } from "../util/licenseIssuer";
     import Breadcrumb from "../components/Breadcrumb.svelte";
     import Loader from "../components/Loader.svelte";
-    import { issuerID } from "../util/auth";
-    import { fetchLicenseIssuers, LicenseIssuer } from "../util/licenseIssuer";
-    import ShieldShaded from "svelte-bootstrap-icons/lib/ShieldShaded";
     import LicenseIssuerNew from "../components/LicenseIssuerNew.svelte";
+    import PageControl from "../components/PageControl.svelte";
+    import LicenseIssuerRow from "../components/LicenseIssuerRow.svelte";
+    import PlusLg from "svelte-bootstrap-icons/lib/PlusLg";
+    import { brand } from "../util/const";
 
     let loading = true;
     let licenseIssuers: LicenseIssuer[] = [];
     let createModal = false;
+    let search: string = "";
+
+    const focus = useFocus();
+
+    let filtered: LicenseIssuer[] = [];
+    $: filtered = licenseIssuers.filter((v) => {
+        if (search === "") {
+            return true;
+        }
+        if (v.Username.indexOf(search) >= 0) {
+            return true;
+        }
+        if (v.Email.indexOf(search) >= 0) {
+            return true;
+        }
+        if (
+            v.PhoneNumber.replace(/[() +-]/g, "").indexOf(
+                search.replace(/[() +-]/g, "")
+            ) >= 0
+        ) {
+            return true;
+        }
+        const lower = search.toLowerCase();
+        if (!v.Active && "inactive".indexOf(lower) >= 0) {
+            return true;
+        }
+        if (v.MaxLicenses <= 0 && "unlimited".indexOf(lower) >= 0) {
+            return true;
+        }
+        return false;
+    });
+
+    let paginated: LicenseIssuer[] = [];
+    $: paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
     onMount(async () => {
         licenseIssuers = await fetchLicenseIssuers();
         loading = false;
     });
-    const onClickIssuer = (licenseIssuerID: number) => {
-        navigate(`/license-issuers/${licenseIssuerID}`);
-    };
     const toggleCreateModal = (event?: MouseEvent) => {
         event?.preventDefault();
         createModal = !createModal;
     };
+
+    const perPage = 8;
+    let page = 1;
 </script>
 
+<svelte:head>
+    <title>License issuers - {brand}</title>
+</svelte:head>
+
 <Container md>
-    <h6 />
     <Loader {loading}>
         <Breadcrumb />
+
         <Row>
-            <Col xs="12" sm="6">
-                <h4>License issuers</h4>
-            </Col>
-            <Col xs="12" sm="6" class="text-end">
+            <Col class="mb-1 d-flex align-items-center">
+                <div class="d-flex align-items-center">
+                    <h4 class="mb-0 text-nowrap">License issuers</h4>
+                    <span
+                        class="ms-2 me-3 align-bottom text-nowrap text-secondary"
+                    >
+                        {licenseIssuers.length}
+                    </span>
+                </div>
+                <div class="flex-grow-1" />
+                <input
+                    class="form-control me-1"
+                    placeholder="Search"
+                    style="max-width:15em;"
+                    bind:value={search}
+                    use:focus
+                />
                 <Button
                     color="primary"
-                    class="d-none d-sm-inline"
-                    outline
+                    class="d-none d-sm-block text-nowrap"
                     on:click={toggleCreateModal}
                 >
-                    New license issuer
+                    New license
                 </Button>
                 <Button
                     color="primary"
-                    class="d-block w-100 d-sm-none"
-                    outline
+                    class="d-sm-none"
                     on:click={toggleCreateModal}
                 >
-                    New license issuer
+                    <PlusLg style="min-width:1.2em;min-height:1.2em;" />
                 </Button>
             </Col>
         </Row>
-        <!-- <div class="mt-3 mb-1 d-flex align-items-end justify-content-between">
-            <h4 class="mb-0">License issuers</h4>
-            <span class="align-bottom text-secondary">
-                {licenseIssuers.length}
-            </span>
-        </div> -->
-        <Table striped hover class="align-middle">
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Max licenses</th>
-                    <th>Updated</th>
-                    <th>Created</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#each licenseIssuers as li (li.ID)}
-                    <tr class="clickable" on:click={() => onClickIssuer(li.ID)}>
-                        <td>
-                            {li.Username}
-                            {#if li.ID === 0}
-                                <ShieldShaded
-                                    class="text-secondary"
-                                    width="0.9em"
-                                    height="0.9em"
-                                />
-                            {/if}
-                            {#if li.ID === $issuerID}
-                                <span class="text-secondary">(You)</span>
-                            {/if}
-                        </td>
-                        <td>
-                            {#if li.MaxLicenses > 0}
-                                {li.MaxLicenses}
-                            {:else}
-                                <span class="text-secondary fst-italic">
-                                    Unlimited
-                                </span>
-                            {/if}
-                        </td>
-                        <td>{li.Updated.toLocaleString()}</td>
-                        <td>{li.Created.toLocaleString()}</td>
-                    </tr>
+
+        <!-- <Row>
+            <Col class="mt-1 mb-2">
+                <InputGroup>
+                    <input
+                        class="form-control"
+                        placeholder="Search"
+                        bind:value={search}
+                        use:focus
+                    />
+                    <Button color="primary" on:click={toggleCreateModal}>
+                        New issuer
+                    </Button>
+                </InputGroup>
+            </Col>
+        </Row> -->
+
+        <Container md>
+            <Row class="mt-1 py-1 border-bottom border-2">
+                <Col xs="7" sm="8" class="fw-bolder">Username</Col>
+                <Col xs="5" sm="4" class="fw-bolder">Max licenses</Col>
+            </Row>
+            {#each paginated as li (li.ID)}
+                <LicenseIssuerRow {li} />
+            {/each}
+            {#if paginated.length === 0}
+                <LicenseIssuerRow empty />
+            {/if}
+            {#if filtered.length > perPage}
+                {#each { length: (perPage - paginated.length) % perPage } as _}
+                    <LicenseIssuerRow placeholder />
                 {/each}
-            </tbody>
-        </Table>
+            {/if}
+        </Container>
+        {#if filtered.length > perPage}
+            <Row>
+                <Col class="my-3">
+                    <PageControl bind:page {perPage} total={filtered.length} />
+                </Col>
+            </Row>
+        {/if}
     </Loader>
     <LicenseIssuerNew isOpen={createModal} toggle={toggleCreateModal} />
 </Container>

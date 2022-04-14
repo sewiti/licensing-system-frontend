@@ -15,7 +15,10 @@ export type WritableField<T> = Writable<Field<T>> & {
 
 export type ReadableField<T> = Readable<Field<T>>;
 
-export const newField = <T>(value: T, schema?: AnySchema): WritableField<T> => {
+export const newField = <T>(
+    value: T,
+    schema?: AnySchema<T, any, T>
+): WritableField<T> => {
     const { subscribe, set, update } = writable(<Field<T>>{
         value: value,
         valid: false,
@@ -68,6 +71,9 @@ export const validate = <T extends { [name: string]: WritableField<any> }>(
 } => {
     const { values, ok } = Object.entries(fields).reduce(
         (prev, [k, v]) => {
+            if (v === undefined) {
+                return prev;
+            }
             v.validate();
             const w = get(v);
             prev.values[k] = w.value;

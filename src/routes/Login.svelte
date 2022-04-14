@@ -1,5 +1,4 @@
 <script lang="ts">
-    import * as yup from "yup";
     import { newField, validate } from "../util/field";
     import { navigate, useFocus } from "svelte-navigator";
     import {

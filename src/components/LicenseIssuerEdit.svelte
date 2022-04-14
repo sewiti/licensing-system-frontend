@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { navigate } from "svelte-navigator";
     import { writable } from "svelte/store";
     import {
         Button,
@@ -17,23 +16,25 @@
     } from "sveltestrap";
     import { isPrivileged } from "../util/auth";
     import { newField, validate } from "../util/field";
-    import {
-        deleteLicenseIssuer,
-        editLicenseIssuer,
-    } from "../util/licenseIssuer";
+    import { editLicenseIssuer } from "../util/licenseIssuer";
     import { licenseIssuer } from "../util/state";
-    import { maxLicenseValidator, usernameValidator } from "../util/validator";
+    import {
+        emailValidator,
+        maxLicenseValidator,
+        phoneNumberValidator,
+        usernameValidator,
+    } from "../util/validator";
 
     export let isOpen: boolean;
     export let toggle: () => void;
-
-    let isOpenDelete: boolean = false;
 
     $: if (isOpen) {
         // onOpened
         active.reset($licenseIssuer.Active);
         username.reset($licenseIssuer.Username);
-        maxLicenses.reset(Math.max($licenseIssuer.MaxLicenses, 1));
+        email.reset($licenseIssuer.Email);
+        phoneNumber.reset($licenseIssuer.PhoneNumber);
+        maxLicenses.reset($licenseIssuer.MaxLicenses ? NaN : 1);
         maxLicensesUnlimited.reset($licenseIssuer.MaxLicenses <= 0);
         usernameInput?.focus();
     }
@@ -43,6 +44,8 @@
 
     const active = newField(true);
     const username = newField("", usernameValidator);
+    const email = newField("", emailValidator);
+    const phoneNumber = newField("", phoneNumberValidator);
     const maxLicenses = newField(1, maxLicenseValidator);
     const maxLicensesUnlimited = newField(false);
 
@@ -50,9 +53,15 @@
 
     $: if ($maxLicensesUnlimited.value) {
         maxLicenses.update((f) => {
-            f.value = 1;
+            f.errors = [];
+            f.valid = true;
+            f.invalid = false;
             return f;
         });
+    } else {
+        if (isNaN($maxLicenses.value)) {
+            maxLicenses.reset();
+        }
         maxLicenses.validate();
     }
 
@@ -66,10 +75,14 @@
                 ? {
                       active,
                       username,
-                      maxLicenses,
+                      email,
+                      phoneNumber,
+                      maxLicenses: $maxLicensesUnlimited.value
+                          ? undefined
+                          : maxLicenses,
                       maxLicensesUnlimited,
                   }
-                : { username };
+                : { email, phoneNumber };
 
             const { values, ok } = validate(fields);
             if (!ok) {
@@ -78,13 +91,20 @@
 
             const { licenseIssuer: li, status } = await editLicenseIssuer(
                 $licenseIssuer.ID,
-                {
-                    active: values.active,
-                    username: values.username,
-                    maxLicenses: values.maxLicensesUnlimited
-                        ? -1
-                        : values.maxLicenses,
-                }
+                $isPrivileged
+                    ? {
+                          active: values.active,
+                          username: values.username,
+                          email: values.email,
+                          phoneNumber: values.phoneNumber,
+                          maxLicenses: values.maxLicensesUnlimited
+                              ? -1
+                              : values.maxLicenses,
+                      }
+                    : {
+                          email: values.email,
+                          phoneNumber: values.phoneNumber,
+                      }
             );
             if (li === null) {
                 if (status === 409) {
@@ -105,51 +125,84 @@
             loading = false;
         }
     };
-    const onDelete = async (event: MouseEvent) => {
-        event.preventDefault();
-        try {
-            loading = true;
-
-            const ok = await deleteLicenseIssuer($licenseIssuer.ID);
-            if (!ok) {
-                return;
-            }
-            toggleDelete();
-            toggle();
-            navigate("/license-issuers");
-        } finally {
-            loading = false;
-        }
-    };
-    const toggleDelete = (event?: MouseEvent) => {
-        event?.preventDefault();
-        toggle();
-        isOpenDelete = !isOpenDelete;
-    };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm">
-    <Form on:submit={onSubmit}>
-        <ModalHeader {toggle}>Edit license issuer</ModalHeader>
-        <ModalBody>
+<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+    <ModalHeader {toggle}>Edit license issuer</ModalHeader>
+    <ModalBody>
+        <Form id="license-issuer-edit" on:submit={onSubmit}>
+            {#if $isPrivileged}
+                <FormGroup>
+                    <Label for="username">Username</Label>
+                    <input
+                        bind:this={usernameInput}
+                        id="username"
+                        name="username"
+                        placeholder="Username"
+                        type="text"
+                        bind:value={$username.value}
+                        on:focusout={username.validate}
+                        class="form-control"
+                        class:is-valid={$username.valid}
+                        class:is-invalid={$username.invalid}
+                    />
+                    {#if $username.invalid}
+                        <div class="invalid-feedback">
+                            <ul>
+                                {#each $username.errors as err}
+                                    <li>{err}</li>
+                                {/each}
+                            </ul>
+                        </div>
+                    {/if}
+                </FormGroup>
+            {/if}
             <FormGroup>
-                <Label for="username">Username</Label>
+                <Label for="email">
+                    Email
+                    <span class="text-secondary">(optional)</span>
+                </Label>
                 <input
-                    bind:this={usernameInput}
-                    id="username"
-                    name="username"
-                    placeholder="Username"
-                    type="text"
-                    bind:value={$username.value}
-                    on:focusout={username.validate}
+                    id="email"
+                    name="email"
+                    placeholder="address@host.com"
+                    type="email"
+                    bind:value={$email.value}
+                    on:focusout={email.validate}
                     class="form-control"
-                    class:is-valid={$username.valid}
-                    class:is-invalid={$username.invalid}
+                    class:is-valid={$email.valid}
+                    class:is-invalid={$email.invalid}
                 />
-                {#if $username.invalid}
+                {#if $email.invalid}
                     <div class="invalid-feedback">
                         <ul>
-                            {#each $username.errors as err}
+                            {#each $email.errors as err}
+                                <li>{err}</li>
+                            {/each}
+                        </ul>
+                    </div>
+                {/if}
+            </FormGroup>
+            <FormGroup>
+                <Label for="phoneNumber">
+                    Phone number
+                    <span class="text-secondary">(optional)</span>
+                </Label>
+                <input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="+370 xxx xxxxx"
+                    type="text"
+                    bind:value={$phoneNumber.value}
+                    on:focusout={phoneNumber.validate}
+                    class="form-control"
+                    class:is-valid={$phoneNumber.valid}
+                    class:is-invalid={$phoneNumber.invalid}
+                />
+                {#if $phoneNumber.invalid}
+                    <div class="invalid-feedback">
+                        <ul>
+                            {#each $phoneNumber.errors as err}
                                 <li>{err}</li>
                             {/each}
                         </ul>
@@ -212,42 +265,20 @@
                     </ul>
                 </div>
             {/if}
-        </ModalBody>
-        <ModalFooter class="justify-content-between">
-            <div>
-                {#if $isPrivileged}
-                    <Button color="danger" outline on:click={toggleDelete}>
-                        Delete
-                    </Button>
-                {/if}
-            </div>
-            <div>
-                <Button color="secondary" outline on:click={toggle}>
-                    Cancel
-                </Button>
-                <Button color="primary" type="submit" disabled={loading}>
-                    {#if loading}
-                        <Spinner size="sm" role="status" />
-                    {/if}
-                    Save
-                </Button>
-            </div>
-        </ModalFooter>
-    </Form>
-</Modal>
-<Modal isOpen={isOpenDelete} toggle={toggleDelete}>
-    <ModalHeader toggle={toggleDelete}>
-        Are you sure you want to delete?
-    </ModalHeader>
+        </Form>
+    </ModalBody>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggleDelete}>
-            Cancel
-        </Button>
-        <Button color="danger" disabled={loading} on:click={onDelete}>
+        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button
+            color="primary"
+            type="submit"
+            form="license-issuer-edit"
+            disabled={loading}
+        >
             {#if loading}
                 <Spinner size="sm" role="status" />
             {/if}
-            Delete
+            Save
         </Button>
     </ModalFooter>
 </Modal>

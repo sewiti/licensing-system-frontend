@@ -5,6 +5,8 @@ export type LicenseIssuer = {
     ID: number;
     Active: boolean;
     Username: string;
+    Email: string;
+    PhoneNumber: string;
     MaxLicenses: number;
     Created: Date;
     Updated: Date;
@@ -20,7 +22,7 @@ export const fetchLicenseIssuer = async (
         return <LicenseIssuer>{};
     }
     const json = await res.json();
-    return parseLicesnseIssuer(json);
+    return parseLicenseIssuer(json);
 };
 
 export const fetchLicenseIssuers = async (): Promise<LicenseIssuer[]> => {
@@ -29,15 +31,17 @@ export const fetchLicenseIssuers = async (): Promise<LicenseIssuer[]> => {
         return [];
     }
     const json = await res.json();
-    return (json as any[]).map((v) => parseLicesnseIssuer(v));
+    return (json as any[]).map((v) => parseLicenseIssuer(v));
 };
 
 export const editLicenseIssuer = async (
     id: number,
     fields: {
-        active: boolean;
-        username: string;
-        maxLicenses: number;
+        active?: boolean;
+        username?: string;
+        email?: string;
+        phoneNumber?: string;
+        maxLicenses?: number;
     }
 ): Promise<{ licenseIssuer: LicenseIssuer; status: number }> => {
     const res = await authFetch(`${baseUrl}/api/license-issuers/${id}`, {
@@ -55,7 +59,7 @@ export const editLicenseIssuer = async (
     }
     const json = await res.json();
     return {
-        licenseIssuer: parseLicesnseIssuer(json),
+        licenseIssuer: parseLicenseIssuer(json),
         status: res.status,
     };
 };
@@ -71,6 +75,8 @@ export const createLicenseIssuer = async (fields: {
     active: boolean;
     username: string;
     password: string;
+    email: string;
+    phoneNumber: string;
     maxLicenses: number;
 }): Promise<{ licenseIssuer: LicenseIssuer; status: number }> => {
     const res = await authFetch(`${baseUrl}/api/license-issuers`, {
@@ -88,16 +94,18 @@ export const createLicenseIssuer = async (fields: {
     }
     const json = await res.json();
     return {
-        licenseIssuer: parseLicesnseIssuer(json),
+        licenseIssuer: parseLicenseIssuer(json),
         status: res.status,
     };
 };
 
-const parseLicesnseIssuer = (json: any): LicenseIssuer => {
+const parseLicenseIssuer = (json: any): LicenseIssuer => {
     return {
         ID: json.id,
         Active: json.active,
         Username: json.username,
+        Email: json.email,
+        PhoneNumber: json.phoneNumber,
         MaxLicenses: json.maxLicenses,
         Created: new Date(json.created),
         Updated: new Date(json.updated),

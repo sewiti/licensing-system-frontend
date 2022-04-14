@@ -4,12 +4,11 @@
     import { isPrivileged } from "../util/auth";
     import { license, licenseIssuer } from "../util/state";
     import { derived } from "svelte/store";
+    import { urlBase64 } from "../util/util";
 
     export let active: "" | "license-issuer" | "license" = "";
 
-    const _licenseID = derived(license, (l) => {
-        return l.ID?.replace("/", "_").replace("+", "-");
-    });
+    const _licenseID = derived(license, (l) => urlBase64(l.ID));
 
     const level = ((): number => {
         switch (active) {
@@ -28,7 +27,10 @@
 <Breadcrumb style="--bs-breadcrumb-divider: '>';">
     {#if level >= 0 && $isPrivileged}
         <BreadcrumbItem active={level === 0}>
-            <Link to="/license-issuers" class="link-secondary">
+            <Link
+                to="/license-issuers"
+                class={level === 0 ? "text-secondary" : ""}
+            >
                 License issuers
             </Link>
         </BreadcrumbItem>
@@ -37,7 +39,7 @@
         <BreadcrumbItem active={level === 1}>
             <Link
                 to={`/license-issuers/${$licenseIssuer.ID}`}
-                class="link-secondary"
+                class={level === 1 ? "text-secondary" : ""}
             >
                 {$licenseIssuer.Username}
             </Link>
@@ -47,10 +49,15 @@
         <BreadcrumbItem active={level === 2}>
             <Link
                 to={`/license-issuers/${$licenseIssuer.ID}/licenses/${$_licenseID}`}
-                class="link-secondary font-monospace"
+                class={level === 2 ? "text-secondary" : ""}
             >
-                {$license.ID?.substring(0, 6)}
+                {#if $license.Name !== ""}
+                    {$license.Name}
+                {:else}
+                    <span class="fst-italic">Unnamed license</span>
+                {/if}
             </Link>
         </BreadcrumbItem>
     {/if}
 </Breadcrumb>
+<hr />

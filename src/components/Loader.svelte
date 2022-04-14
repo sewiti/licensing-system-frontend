@@ -9,10 +9,10 @@
 {#if loading}
     {#if useTransition}
         <div in:fade={{ duration: 200, easing: cubicIn }} class="text-center">
-            <Spinner />
+            <Spinner style="color:rgb(58 77 135);" />
         </div>
     {:else}
-        <div class="text-center">
+        <div class="text-center" style="color:rgb(58 77 135);">
             <Spinner />
         </div>
     {/if}

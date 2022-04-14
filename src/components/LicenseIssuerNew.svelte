@@ -1,9 +1,8 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
-
     import { navigate } from "svelte-navigator";
-
     import { writable } from "svelte/store";
+    import { newField, validate } from "../util/field";
+    import { createLicenseIssuer } from "../util/licenseIssuer";
     import {
         Button,
         Form,
@@ -18,11 +17,11 @@
         ModalHeader,
         Spinner,
     } from "sveltestrap";
-    import { newField, validate } from "../util/field";
-    import { createLicenseIssuer } from "../util/licenseIssuer";
     import {
+        emailValidator,
         maxLicenseValidator,
         newPasswordEntropyValidator,
+        phoneNumberValidator,
         usernameValidator,
     } from "../util/validator";
 
@@ -33,9 +32,25 @@
         // onOpened
         username.reset();
         password.reset();
+        email.reset();
+        phoneNumber.reset();
         maxLicenses.reset();
         maxLicensesUnlimited.reset();
         usernameInput?.focus();
+    }
+
+    $: if ($maxLicensesUnlimited.value) {
+        maxLicenses.update((f) => {
+            f.errors = [];
+            f.valid = true;
+            f.invalid = false;
+            return f;
+        });
+    } else {
+        if (isNaN($maxLicenses.value)) {
+            maxLicenses.reset();
+        }
+        maxLicenses.validate();
     }
 
     let loading = false;
@@ -43,6 +58,8 @@
 
     const username = newField("", usernameValidator);
     const password = newField("", newPasswordEntropyValidator(username));
+    const email = newField("", emailValidator);
+    const phoneNumber = newField("", phoneNumberValidator);
     const maxLicenses = newField(1, maxLicenseValidator);
     const maxLicensesUnlimited = newField(false);
 
@@ -57,7 +74,11 @@
             const { values, ok } = validate({
                 username,
                 password,
-                maxLicenses,
+                email,
+                phoneNumber,
+                maxLicenses: $maxLicensesUnlimited.value
+                    ? undefined
+                    : maxLicenses,
                 maxLicensesUnlimited,
             });
             if (!ok) {
@@ -68,6 +89,8 @@
                 active: true,
                 username: values.username,
                 password: values.password,
+                email: values.email,
+                phoneNumber: values.phoneNumber,
                 maxLicenses: values.maxLicensesUnlimited
                     ? -1
                     : values.maxLicenses,
@@ -93,10 +116,10 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm">
-    <Form on:submit={onSubmit}>
-        <ModalHeader {toggle}>Create license issuer</ModalHeader>
-        <ModalBody>
+<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+    <ModalHeader {toggle}>Create license issuer</ModalHeader>
+    <ModalBody>
+        <Form id="license-issuer-new" on:submit={onSubmit}>
             <FormGroup>
                 <Label for="username">Username</Label>
                 <input
@@ -138,6 +161,58 @@
                     <div class="invalid-feedback">
                         <ul>
                             {#each $password.errors as err}
+                                <li>{err}</li>
+                            {/each}
+                        </ul>
+                    </div>
+                {/if}
+            </FormGroup>
+            <FormGroup>
+                <Label for="email">
+                    Email
+                    <span class="text-secondary">(optional)</span>
+                </Label>
+                <input
+                    id="email"
+                    name="email"
+                    placeholder="address@host.com"
+                    type="email"
+                    bind:value={$email.value}
+                    on:focusout={email.validate}
+                    class="form-control"
+                    class:is-valid={$email.valid}
+                    class:is-invalid={$email.invalid}
+                />
+                {#if $email.invalid}
+                    <div class="invalid-feedback">
+                        <ul>
+                            {#each $email.errors as err}
+                                <li>{err}</li>
+                            {/each}
+                        </ul>
+                    </div>
+                {/if}
+            </FormGroup>
+            <FormGroup>
+                <Label for="phoneNumber">
+                    Phone number
+                    <span class="text-secondary">(optional)</span>
+                </Label>
+                <input
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    placeholder="+370 xxx xxxxx"
+                    type="text"
+                    bind:value={$phoneNumber.value}
+                    on:focusout={phoneNumber.validate}
+                    class="form-control"
+                    class:is-valid={$phoneNumber.valid}
+                    class:is-invalid={$phoneNumber.invalid}
+                />
+                {#if $phoneNumber.invalid}
+                    <div class="invalid-feedback">
+                        <ul>
+                            {#each $phoneNumber.errors as err}
                                 <li>{err}</li>
                             {/each}
                         </ul>
@@ -187,15 +262,20 @@
                     </ul>
                 </div>
             {/if}
-        </ModalBody>
-        <ModalFooter>
-            <Button color="secondary" outline on:click={toggle}>Cancel</Button>
-            <Button color="primary" type="submit" disabled={loading}>
-                {#if loading}
-                    <Spinner size="sm" role="status" />
-                {/if}
-                Create
-            </Button>
-        </ModalFooter>
-    </Form>
+        </Form>
+    </ModalBody>
+    <ModalFooter>
+        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button
+            color="primary"
+            type="submit"
+            form="license-issuer-new"
+            disabled={loading}
+        >
+            {#if loading}
+                <Spinner size="sm" role="status" />
+            {/if}
+            Create
+        </Button>
+    </ModalFooter>
 </Modal>
