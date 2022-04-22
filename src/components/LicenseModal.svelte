@@ -57,6 +57,7 @@
             : [];
         parsedFields = parsedLicenseFields !== null;
 
+        active.reset(edit ? $license.Active : undefined);
         name.reset(edit ? $license.Name : undefined);
         note.reset(edit ? $license.Note : undefined);
         maxSessions.reset(edit ? $license.MaxSessions : undefined);
@@ -89,6 +90,7 @@
     let loading = false;
     const errorMsg = writable("");
 
+    const active = newField(true);
     const name = newField("", licenseNameValidator);
     const tags = newField("", licenseTagsValidator);
     const endUserEmail = newField("", emailValidator);
@@ -124,6 +126,7 @@
             errorMsg.set("");
 
             const { values, ok } = validate({
+                active,
                 name,
                 tags,
                 endUserEmail,
@@ -139,6 +142,7 @@
             const uploadData = parsedFields || (values.fields || []).length > 0;
 
             const reqFields = {
+                active: values.active,
                 name: values.name,
                 tags: parseTags(values.tags),
                 endUserEmail: values.endUserEmail,
@@ -393,6 +397,17 @@
                         Add field
                     </a>
                 </div>
+            </FormGroup>
+            <FormGroup>
+                <Input
+                    id="active"
+                    name="active"
+                    type="switch"
+                    label="Active"
+                    bind:checked={$active.value}
+                >
+                    Active
+                </Input>
             </FormGroup>
             {#if $errorMsg !== ""}
                 <div class="text-danger mt-1" style="font-size: .875em">

@@ -132,6 +132,11 @@ export const licenseNameValidator = string().max(
     (v) => `Name must be at most ${v.max} characters`
 );
 
+export const productNameValidator = string().max(
+    64,
+    (v) => `Name must be at most ${v.max} characters`
+);
+
 export const licenseTagsValidator = string().test({
     test: (s: string): boolean => {
         const tags = parseTags(s);

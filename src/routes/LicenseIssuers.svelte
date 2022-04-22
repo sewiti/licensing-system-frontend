@@ -58,7 +58,7 @@
         createModal = !createModal;
     };
 
-    const perPage = 8;
+    const perPage = 15;
     let page = 1;
 </script>
 

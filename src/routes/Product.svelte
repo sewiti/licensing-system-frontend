@@ -12,9 +12,8 @@
         DropdownItem,
         Badge,
     } from "sveltestrap";
-    import { fetchLicenses } from "../util/license";
-    import { fetchLicenseIssuer } from "../util/licenseIssuer";
-    import { licenseIssuer, licenses } from "../util/state";
+    import { fetchLicenses, License } from "../util/license";
+    import { licenseIssuer, product } from "../util/state";
     import Breadcrumb from "../components/Breadcrumb.svelte";
     import Loader from "../components/Loader.svelte";
     import PlusLg from "svelte-bootstrap-icons/lib/PlusLg";
@@ -29,28 +28,31 @@
     import PageControl from "../components/PageControl.svelte";
     import LicenseRow from "../components/LicenseRow.svelte";
     import { brand } from "../util/const";
-    import { fetchProducts, Product } from "../util/product";
-    import ProductRow from "../components/ProductRow.svelte";
-    import ProductModal from "../components/ProductModal.svelte";
+    import { fetchProduct } from "../util/product";
 
     export let licenseIssuerID: number;
-    $: loadData(licenseIssuerID);
+    export let productID: number;
+    $: loadData(licenseIssuerID, productID);
     let loading = true;
     let editModal = false;
     let deleteModal = false;
     let licenseModal = false;
     let chpasswdModal = false;
-    let products: Product[] = [];
+    let licenses: License[] = [];
 
     let search: string = "";
 
     const focus = useFocus();
 
-    const loadData = async (licenseIssuerID: number) => {
+    let limitReached: boolean;
+    $: limitReached =
+        $licenseIssuer.MaxLicenses > 0 &&
+        licenses.length >= $licenseIssuer.MaxLicenses;
+
+    const loadData = async (licenseIssuerID: number, productID: number) => {
         loading = true;
-        licenseIssuer.set(await fetchLicenseIssuer(licenseIssuerID));
-        licenses.set(await fetchLicenses(licenseIssuerID));
-        products = await fetchProducts(licenseIssuerID);
+        product.set(await fetchProduct(licenseIssuerID, productID));
+        licenses = await fetchLicenses(licenseIssuerID);
         loading = false;
     };
     const toggleEditModal = (event?: MouseEvent) => {
@@ -70,27 +72,44 @@
         licenseModal = !licenseModal;
     };
 
-    let filtered: Product[] = [];
-    $: filtered = products.filter((v) => {
+    let filtered: License[] = [];
+    $: filtered = licenses.filter((v) => {
         if (search === "") {
             return true;
         }
         const lower = search.toLowerCase();
         if (v.Name === "") {
-            if ("unnamed product".indexOf(lower) >= 0) {
+            if ("unnamed license".indexOf(lower) >= 0) {
                 return true;
             }
         } else if (v.Name.indexOf(search) >= 0) {
             return true;
         }
-        return false;
+        if (v.Note.indexOf(search) >= 0) {
+            return true;
+        }
+        if (v.ValidUntil === null) {
+            if ("no expiry".indexOf(lower) >= 0) {
+                return true;
+            }
+        } else if (v.ValidUntil < new Date() && "expired".indexOf(lower) >= 0) {
+            return true;
+        }
+        if (v.LastUsed === null && "not used".indexOf(lower) >= 0) {
+            return true;
+        }
+        const matchesTag = v.Tags.reduce(
+            (a, v) => (v.indexOf(search) >= 0 ? true : a),
+            false
+        );
+        return matchesTag;
     });
 
     const onClickTag = (e: CustomEvent<{ tag: string }>) => {
         search = e.detail.tag;
     };
 
-    let paginated: Product[] = [];
+    let paginated: License[] = [];
     $: paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
     const perPage = 8;
@@ -174,49 +193,20 @@
                                     : "secondary"}
                                 class="text-nowrap"
                                 outline
-                                disabled={$licenseIssuer.ID === 0}
                                 on:click={toggleEditModal}
                             >
-                                Edit issuer
+                                Edit product
                             </Button>
                         </span>
-                        {#if $licenseIssuer.ID === 0}
-                            <Tooltip
-                                target="edit-license-issuer-wrapper"
-                                placement="left"
-                                animation
-                            >
-                                {$licenseIssuer.Username} is immutable
-                            </Tooltip>
-                        {/if}
                         <DropdownToggle
                             split
-                            color={$licenseIssuer.Active
-                                ? "primary"
-                                : "secondary"}
+                            color={$product.Active ? "primary" : "secondary"}
                             outline
                         />
                         <DropdownMenu end>
-                            <DropdownItem on:click={toggleChpasswdModal}>
-                                Change password
+                            <DropdownItem on:click={toggleDeleteModal}>
+                                Delete product
                             </DropdownItem>
-                            <div id="delete-license-issuer-wrapper">
-                                <DropdownItem
-                                    disabled={$licenseIssuer.ID === 0}
-                                    on:click={toggleDeleteModal}
-                                >
-                                    Delete issuer
-                                </DropdownItem>
-                            </div>
-                            {#if $licenseIssuer.ID === 0}
-                                <Tooltip
-                                    target="delete-license-issuer-wrapper"
-                                    placement="left"
-                                    animation
-                                >
-                                    {$licenseIssuer.Username} is immutable
-                                </Tooltip>
-                            {/if}
                         </DropdownMenu>
                     </ButtonDropdown>
                 </div>
@@ -226,11 +216,15 @@
         <Row>
             <Col class="mt-3 mb-1 d-flex align-items-center">
                 <div class="d-flex align-items-center">
-                    <h4 class="mb-0 text-nowrap">Products</h4>
+                    <h4 class="mb-0 text-nowrap">Licenses</h4>
                     <span
                         class="ms-2 me-3 align-bottom text-nowrap text-secondary"
                     >
-                        {products.length}
+                        {licenses.length}
+                        /
+                        {$licenseIssuer.MaxLicenses <= 0
+                            ? "Unlimited"
+                            : $licenseIssuer.MaxLicenses}
                     </span>
                 </div>
                 <div class="flex-grow-1" />
@@ -244,13 +238,15 @@
                 <Button
                     color="primary"
                     class="d-none d-sm-block text-nowrap"
+                    disabled={limitReached}
                     on:click={toggleLicenseModal}
                 >
-                    New product
+                    New license
                 </Button>
                 <Button
                     color="primary"
                     class="d-sm-none"
+                    disabled={limitReached}
                     on:click={toggleLicenseModal}
                 >
                     <PlusLg style="min-width:1.2em;min-height:1.2em;" />
@@ -260,18 +256,19 @@
 
         <Container md>
             <Row class="mt-1 py-1 border-bottom border-2">
-                <Col xs="8" class="fw-bolder">Name</Col>
-                <Col xs="4" class="fw-bolder">Licenses</Col>
+                <Col xs="5" class="fw-bolder">Name</Col>
+                <Col xs="4" class="fw-bolder">Expires</Col>
+                <Col xs="3" class="fw-bolder">Last used</Col>
             </Row>
-            {#each paginated as p, i (p?.ID)}
-                <ProductRow {p} />
+            {#each paginated as l, i (l?.ID)}
+                <LicenseRow {l} index={i} on:clickTag={onClickTag} />
             {/each}
             {#if paginated.length === 0}
-                <ProductRow empty />
+                <LicenseRow empty />
             {/if}
             {#if filtered.length > perPage}
                 {#each { length: (perPage - paginated.length) % perPage } as _}
-                    <ProductRow placeholder />
+                    <LicenseRow placeholder />
                 {/each}
             {/if}
         </Container>
@@ -290,5 +287,5 @@
         isOpen={chpasswdModal}
         toggle={toggleChpasswdModal}
     />
-    <ProductModal isOpen={licenseModal} toggle={toggleLicenseModal} />
+    <LicenseModal isOpen={licenseModal} toggle={toggleLicenseModal} />
 </Container>

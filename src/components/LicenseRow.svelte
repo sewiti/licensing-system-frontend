@@ -53,7 +53,9 @@
                     (licenseValid ? "color:rgb(58 77 135);" : "")}
             /> -->
             <PostcardFill
-                style="min-height:1.4em;min-width:1.4em;color:rgb(58 77 135);"
+                class={l.Active ? "" : "text-secondary"}
+                style={"min-height:1.4em;min-width:1.4em;" +
+                    (l.Active ? "color:rgb(58 77 135);" : "")}
             />
             <span
                 class="mx-2 text-nowrap"
@@ -62,6 +64,9 @@
             >
                 {l.Name !== "" ? l.Name : "Unnamed license"}
             </span>
+            {#if !l.Active}
+                <Badge color="secondary">Inactive</Badge>
+            {/if}
             {#each l.Tags as tag}
                 <a href="/#" style="z-index:2;" on:click={onClickTag(tag)}>
                     <span class="badge rounded-pill bg-primary me-1 tag">

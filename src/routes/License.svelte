@@ -101,11 +101,6 @@
         loadData(licenseIssuerID, licenseID);
     };
 
-    const licenseValid = derived(
-        license,
-        (l) => l.ValidUntil === null || l.ValidUntil >= new Date()
-    );
-
     let licenseModal = false;
     const toggleLicenseModal = (event?: MouseEvent) => {
         event?.preventDefault();
@@ -155,9 +150,9 @@
         <Row>
             <Col xs="12" class="d-flex">
                 <PostcardFill
-                    class={$licenseValid ? "" : "text-secondary"}
+                    class={$license.Active ? "" : "text-secondary"}
                     style={"min-width:4em;min-height:4em;" +
-                        ($licenseValid ? "color: rgb(58 77 135);" : "")}
+                        ($license.Active ? "color: rgb(58 77 135);" : "")}
                 />
                 <div class="mx-2">
                     <h4 class="mb-0">
@@ -167,6 +162,15 @@
                             <span class="text-secondary fst-italic">
                                 Unnamed license
                             </span>
+                        {/if}
+                        {#if !$license.Active}
+                            <Badge
+                                class="align-middle"
+                                style="font-size:small;"
+                                color="secondary"
+                            >
+                                Inactive
+                            </Badge>
                         {/if}
                         {#if $license.ValidUntil !== null && $license.ValidUntil < new Date()}
                             <Badge
@@ -182,7 +186,9 @@
                         {#each $license.Tags as tag}
                             <Badge
                                 class="me-1"
-                                color={$licenseValid ? "primary" : "secondary"}
+                                color={$license.Active
+                                    ? "primary"
+                                    : "secondary"}
                                 pill
                             >
                                 {tag}
@@ -193,7 +199,7 @@
                 <div class="flex-grow-1 text-end">
                     <ButtonDropdown>
                         <Button
-                            color={$licenseValid ? "primary" : "secondary"}
+                            color={$license.Active ? "primary" : "secondary"}
                             class="text-nowrap"
                             on:click={toggleLicenseModal}
                             outline
@@ -202,7 +208,7 @@
                         </Button>
                         <DropdownToggle
                             split
-                            color={$licenseValid ? "primary" : "secondary"}
+                            color={$license.Active ? "primary" : "secondary"}
                             outline
                         />
                         <DropdownMenu end>
@@ -212,7 +218,7 @@
                         </DropdownMenu>
                     </ButtonDropdown>
                     <Button
-                        color="primary"
+                        color={$license.Active ? "primary" : "secondary"}
                         class="d-none d-sm-inline"
                         on:click={toggleViewKey}
                     >
