@@ -12,10 +12,14 @@
         DropdownItem,
         Badge,
     } from "sveltestrap";
-    import { fetchLicenses, License } from "../util/license";
-    import { fetchLicenseIssuer } from "../util/licenseIssuer";
-    import { licenseIssuer } from "../util/state";
+    import { fetchLicenses } from "../util/license";
+    import {
+        deleteLicenseIssuer,
+        fetchLicenseIssuer,
+    } from "../util/licenseIssuer";
+    import { licenseIssuer, licenses } from "../util/state";
     import Breadcrumb from "../components/Breadcrumb.svelte";
+    import QuestionCircle from "svelte-bootstrap-icons/lib/QuestionCircle";
     import Loader from "../components/Loader.svelte";
     import PlusLg from "svelte-bootstrap-icons/lib/PlusLg";
     import PersonFill from "svelte-bootstrap-icons/lib/PersonFill";
@@ -24,11 +28,12 @@
     import LicenseIssuerEdit from "../components/LicenseIssuerEdit.svelte";
     import ChangePasswd from "../components/ChangePasswd.svelte";
     import { derived } from "svelte/store";
-    import LicenseModal from "../components/LicenseModal.svelte";
-    import LicenseIssuerDelete from "../components/LicenseIssuerDelete.svelte";
     import PageControl from "../components/PageControl.svelte";
-    import LicenseRow from "../components/LicenseRow.svelte";
     import { brand } from "../util/const";
+    import { fetchProducts, Product } from "../util/product";
+    import ProductRow from "../components/ProductRow.svelte";
+    import ProductModal from "../components/ProductModal.svelte";
+    import DeleteModal from "../components/DeleteModal.svelte";
 
     export let licenseIssuerID: number;
     $: loadData(licenseIssuerID);
@@ -37,21 +42,17 @@
     let deleteModal = false;
     let licenseModal = false;
     let chpasswdModal = false;
-    let licenses: License[] = [];
+    let products: Product[] = [];
 
     let search: string = "";
 
     const focus = useFocus();
 
-    let limitReached: boolean;
-    $: limitReached =
-        $licenseIssuer.MaxLicenses > 0 &&
-        licenses.length >= $licenseIssuer.MaxLicenses;
-
     const loadData = async (licenseIssuerID: number) => {
         loading = true;
         licenseIssuer.set(await fetchLicenseIssuer(licenseIssuerID));
-        licenses = await fetchLicenses(licenseIssuerID);
+        licenses.set(await fetchLicenses(licenseIssuerID));
+        products = await fetchProducts(licenseIssuerID);
         loading = false;
     };
     const toggleEditModal = (event?: MouseEvent) => {
@@ -71,44 +72,31 @@
         licenseModal = !licenseModal;
     };
 
-    let filtered: License[] = [];
-    $: filtered = licenses.filter((v) => {
+    let filtered: Product[] = [];
+    $: filtered = products.filter((v) => {
         if (search === "") {
             return true;
         }
         const lower = search.toLowerCase();
         if (v.Name === "") {
-            if ("unnamed license".indexOf(lower) >= 0) {
+            if ("unnamed product".indexOf(lower) >= 0) {
                 return true;
             }
         } else if (v.Name.indexOf(search) >= 0) {
             return true;
         }
-        if (v.Note.indexOf(search) >= 0) {
-            return true;
-        }
-        if (v.ValidUntil === null) {
-            if ("no expiry".indexOf(lower) >= 0) {
-                return true;
-            }
-        } else if (v.ValidUntil < new Date() && "expired".indexOf(lower) >= 0) {
-            return true;
-        }
-        if (v.LastUsed === null && "not used".indexOf(lower) >= 0) {
-            return true;
-        }
-        const matchesTag = v.Tags.reduce(
-            (a, v) => (v.indexOf(search) >= 0 ? true : a),
-            false
-        );
-        return matchesTag;
+        return false;
     });
+
+    const onDelete = async (): Promise<boolean> => {
+        return deleteLicenseIssuer($licenseIssuer.ID);
+    };
 
     const onClickTag = (e: CustomEvent<{ tag: string }>) => {
         search = e.detail.tag;
     };
 
-    let paginated: License[] = [];
+    let paginated: Product[] = [];
     $: paginated = filtered.slice((page - 1) * perPage, page * perPage);
 
     const perPage = 8;
@@ -155,33 +143,6 @@
                             </Badge>
                         {/if}
                     </h4>
-                    {#if $licenseIssuer.Email !== ""}
-                        <div>
-                            <Envelope class="text-secondary" />
-                            <a
-                                href={`mailto:${$licenseIssuer.Email}`}
-                                class="text-secondary"
-                            >
-                                {$licenseIssuer.Email}
-                            </a>
-                        </div>
-                    {/if}
-                    {#if $licenseIssuer.PhoneNumber !== ""}
-                        <div>
-                            <Telephone class="text-secondary" />
-                            <a
-                                href={`tel:${$licenseIssuer.PhoneNumber}`}
-                                class="text-secondary"
-                            >
-                                {$licenseIssuer.PhoneNumber}
-                            </a>
-                        </div>
-                    {/if}
-                    {#if $licenseIssuer.Email === "" && $licenseIssuer.PhoneNumber === ""}
-                        <div class="text-secondary fst-italic">
-                            No contact information
-                        </div>
-                    {/if}
                 </div>
                 <div class="flex-grow-1 text-end">
                     <ButtonDropdown>
@@ -194,6 +155,7 @@
                                 outline
                                 disabled={$licenseIssuer.ID === 0}
                                 on:click={toggleEditModal}
+                                style="border-top-right-radius: 0; border-bottom-right-radius: 0;"
                             >
                                 Edit issuer
                             </Button>
@@ -239,21 +201,63 @@
                     </ButtonDropdown>
                 </div>
             </Col>
+            <Col xs="12" class="mt-2">
+                <div class="p-2 border rounded-3 h-100">
+                    <h4>Info</h4>
+                    {#if $licenseIssuer.Email !== ""}
+                        <div>
+                            <Envelope />
+                            <a
+                                href={`mailto:${$licenseIssuer.Email}`}
+                                class="text-dark"
+                            >
+                                {$licenseIssuer.Email}
+                            </a>
+                        </div>
+                    {/if}
+                    {#if $licenseIssuer.PhoneNumber !== ""}
+                        <div>
+                            <Telephone />
+                            <a
+                                href={`tel:${$licenseIssuer.PhoneNumber}`}
+                                class="text-dark"
+                            >
+                                {$licenseIssuer.PhoneNumber}
+                            </a>
+                        </div>
+                    {/if}
+                    {#if $licenseIssuer.Email === "" && $licenseIssuer.PhoneNumber === ""}
+                        <div class="text-secondary fst-italic">
+                            No contact information
+                        </div>
+                    {/if}
+                </div>
+            </Col>
         </Row>
 
         <Row>
             <Col class="mt-3 mb-1 d-flex align-items-center">
                 <div class="d-flex align-items-center">
-                    <h4 class="mb-0 text-nowrap">Licenses</h4>
+                    <h4 class="mb-0 text-nowrap">Products</h4>
                     <span
+                        id="products-count"
                         class="ms-2 me-3 align-bottom text-nowrap text-secondary"
                     >
-                        {licenses.length}
-                        /
-                        {$licenseIssuer.MaxLicenses <= 0
+                        {products.length}
+                        ({$licenseIssuer.MaxLicenses <= 0
                             ? "Unlimited"
-                            : $licenseIssuer.MaxLicenses}
+                            : $licenseIssuer.MaxLicenses})
+                        <QuestionCircle class="text-secondary" />
                     </span>
+
+                    <Tooltip target="products-count" placement="bottom">
+                        {products.length} products<br />
+                        {#if $licenseIssuer.MaxLicenses > 0}
+                            {$licenseIssuer.MaxLicenses} maximum number of licenses
+                        {:else}
+                            Unlimited number of licenses
+                        {/if}
+                    </Tooltip>
                 </div>
                 <div class="flex-grow-1" />
                 <input
@@ -266,15 +270,13 @@
                 <Button
                     color="primary"
                     class="d-none d-sm-block text-nowrap"
-                    disabled={limitReached}
                     on:click={toggleLicenseModal}
                 >
-                    New license
+                    New product
                 </Button>
                 <Button
                     color="primary"
                     class="d-sm-none"
-                    disabled={limitReached}
                     on:click={toggleLicenseModal}
                 >
                     <PlusLg style="min-width:1.2em;min-height:1.2em;" />
@@ -282,41 +284,20 @@
             </Col>
         </Row>
 
-        <!-- <Row>
-            <Col class="my-2">
-                <InputGroup>
-                    <input
-                        class="form-control"
-                        placeholder="Search"
-                        bind:value={search}
-                        use:focus
-                    />
-                    <Button
-                        color="primary"
-                        disabled={limitReached}
-                        on:click={toggleLicenseModal}
-                    >
-                        New license
-                    </Button>
-                </InputGroup>
-            </Col>
-        </Row> -->
-
         <Container md>
             <Row class="mt-1 py-1 border-bottom border-2">
-                <Col xs="5" class="fw-bolder">Name</Col>
-                <Col xs="4" class="fw-bolder">Expires</Col>
-                <Col xs="3" class="fw-bolder">Last used</Col>
+                <Col xs="8" class="fw-bolder">Name</Col>
+                <Col xs="4" class="fw-bolder">Licenses</Col>
             </Row>
-            {#each paginated as l, i (l?.ID)}
-                <LicenseRow {l} index={i} on:clickTag={onClickTag} />
+            {#each paginated as p, i (p?.ID)}
+                <ProductRow {p} />
             {/each}
             {#if paginated.length === 0}
-                <LicenseRow empty />
+                <ProductRow empty />
             {/if}
             {#if filtered.length > perPage}
                 {#each { length: (perPage - paginated.length) % perPage } as _}
-                    <LicenseRow placeholder />
+                    <ProductRow placeholder />
                 {/each}
             {/if}
         </Container>
@@ -329,11 +310,16 @@
         {/if}
     </Loader>
     <LicenseIssuerEdit isOpen={editModal} toggle={toggleEditModal} />
-    <LicenseIssuerDelete isOpen={deleteModal} toggle={toggleDeleteModal} />
+    <DeleteModal
+        isOpen={deleteModal}
+        toggle={toggleDeleteModal}
+        navigateTo="/license-issuers"
+        {onDelete}
+    />
     <ChangePasswd
         username={derived(licenseIssuer, (f) => f.Username)}
         isOpen={chpasswdModal}
         toggle={toggleChpasswdModal}
     />
-    <LicenseModal isOpen={licenseModal} toggle={toggleLicenseModal} />
+    <ProductModal isOpen={licenseModal} toggle={toggleLicenseModal} />
 </Container>

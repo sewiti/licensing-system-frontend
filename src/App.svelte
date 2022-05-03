@@ -12,6 +12,7 @@
     import LicenseIssuers from "./routes/LicenseIssuers.svelte";
     import LicenseIssuer from "./routes/LicenseIssuer.svelte";
     import License from "./routes/License.svelte";
+    import Product from "./routes/Product.svelte";
 </script>
 
 <Router>
@@ -37,11 +38,21 @@
             <LicenseIssuer licenseIssuerID={+params.licenseIssuerID} />
         </Route>
         <Route
-            path="/license-issuers/:licenseIssuerID/licenses/:licenseID"
+            path="/license-issuers/:licenseIssuerID/products/:productID"
+            let:params
+        >
+            <Product
+                licenseIssuerID={+params.licenseIssuerID}
+                productID={+params.productID}
+            />
+        </Route>
+        <Route
+            path="/license-issuers/:licenseIssuerID/products/:productID/licenses/:licenseID"
             let:params
         >
             <License
                 licenseIssuerID={+params.licenseIssuerID}
+                productID={+params.productID}
                 licenseID={params.licenseID}
             />
         </Route>

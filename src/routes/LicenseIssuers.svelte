@@ -58,7 +58,7 @@
         createModal = !createModal;
     };
 
-    const perPage = 8;
+    const perPage = 10;
     let page = 1;
 </script>
 
@@ -93,7 +93,7 @@
                     class="d-none d-sm-block text-nowrap"
                     on:click={toggleCreateModal}
                 >
-                    New license
+                    New issuer
                 </Button>
                 <Button
                     color="primary"

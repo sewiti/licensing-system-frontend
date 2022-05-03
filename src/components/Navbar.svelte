@@ -42,7 +42,7 @@
             {#if $loggedIn}
                 <NavItem>
                     <Link to={`/license-issuers/${$issuerID}`} class="nav-link">
-                        My licenses
+                        My products
                     </Link>
                 </NavItem>
                 {#if $isPrivileged}

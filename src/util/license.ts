@@ -5,6 +5,7 @@ import { urlBase64 } from "./util";
 export type License = {
     ID: string;
     Key: string;
+    Active: boolean;
     Name: string;
     Tags: string[];
     EndUserEmail: string;
@@ -15,6 +16,7 @@ export type License = {
     LastUsed: Date | null;
     Created: Date;
     Updated: Date;
+    ProductID: number | null;
 };
 
 export const fetchLicenses = async (
@@ -48,6 +50,7 @@ export const fetchLicense = async (
 export const createLicense = async (
     issuerID: number,
     fields: {
+        active?: boolean;
         name?: string;
         tags?: string[];
         endUserEmail?: string;
@@ -55,6 +58,7 @@ export const createLicense = async (
         data?: string;
         maxSessions?: number;
         validUntil?: Date | null;
+        productID?: number | null;
     }
 ): Promise<{ license: License; status: number }> => {
     const res = await authFetch(
@@ -98,6 +102,7 @@ export const updateLicense = async (
     issuerID: number,
     licenseID: string,
     fields: {
+        active?: boolean;
         name?: string;
         tags?: string[];
         endUserEmail?: string;
@@ -105,6 +110,7 @@ export const updateLicense = async (
         data?: string;
         maxSessions?: number;
         validUntil?: Date | null;
+        productID?: number | null;
     }
 ): Promise<{ license: License; status: number }> => {
     const _licenseID = urlBase64(licenseID);
@@ -135,6 +141,7 @@ const parseLicense = (json: any): License => {
     return {
         ID: json.id,
         Key: json.key,
+        Active: json.active,
         Name: json.name,
         Tags: json.tags,
         EndUserEmail: json.endUserEmail,
@@ -145,6 +152,7 @@ const parseLicense = (json: any): License => {
         LastUsed: json.lastUsed ? new Date(json.lastUsed) : null,
         Created: new Date(json.created),
         Updated: new Date(json.updated),
+        ProductID: json.productID,
     };
 };
 

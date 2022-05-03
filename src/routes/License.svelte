@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onDestroy, onMount } from "svelte";
     import {
         Badge,
         Button,
@@ -20,30 +20,36 @@
     } from "sveltestrap";
     import Breadcrumb from "../components/Breadcrumb.svelte";
     import Loader from "../components/Loader.svelte";
-    import { fetchLicense } from "../util/license";
+    import {
+        deleteLicense,
+        fetchLicense,
+        parseLicenseFields,
+    } from "../util/license";
     import { fetchLicenseIssuer } from "../util/licenseIssuer";
     import {
         fetchLicenseSessions,
         LicenseSession,
     } from "../util/licenseSession";
-    import { license, licenseIssuer } from "../util/state";
+    import { license, licenseIssuer, product } from "../util/state";
     import PostcardFill from "svelte-bootstrap-icons/lib/PostcardFill";
     import Envelope from "svelte-bootstrap-icons/lib/Envelope";
+    import CardText from "svelte-bootstrap-icons/lib/CardText";
     import HourglassTop from "svelte-bootstrap-icons/lib/HourglassTop";
     import HourglassSplit from "svelte-bootstrap-icons/lib/HourglassSplit";
     import HourglassBottom from "svelte-bootstrap-icons/lib/HourglassBottom";
     import LicenseSessionView from "../components/LicenseSessionView.svelte";
-    import { derived } from "svelte/store";
     import LicenseModal from "../components/LicenseModal.svelte";
     import { getLang } from "../util/util";
-    import LicenseDelete from "../components/LicenseDelete.svelte";
     import PageControl from "../components/PageControl.svelte";
     import { useFocus } from "svelte-navigator";
     import LicenseSessionRow from "../components/LicenseSessionRow.svelte";
     import { brand } from "../util/const";
-    import Navbar from "../components/Navbar.svelte";
+    import { fetchProduct } from "../util/product";
+    import CustomDataView from "../components/CustomDataView.svelte";
+    import DeleteModal from "../components/DeleteModal.svelte";
 
     export let licenseIssuerID: number;
+    export let productID: number;
     export let licenseID: string;
 
     const focus = useFocus();
@@ -96,15 +102,13 @@
             // Ensure breadcrumb is loaded ok - could happen on first load
             licenseIssuer.set(await fetchLicenseIssuer(licenseIssuerID));
         }
+        if ($product.ID === undefined) {
+            product.set(await fetchProduct(licenseIssuerID, productID));
+        }
     });
     const onTerminate = () => {
         loadData(licenseIssuerID, licenseID);
     };
-
-    const licenseValid = derived(
-        license,
-        (l) => l.ValidUntil === null || l.ValidUntil >= new Date()
-    );
 
     let licenseModal = false;
     const toggleLicenseModal = (event?: MouseEvent) => {
@@ -137,6 +141,10 @@
 
     const perPage = 8;
     let page = 1;
+
+    const onDelete = async (): Promise<boolean> => {
+        return deleteLicense($licenseIssuer.ID, $license.ID);
+    };
 </script>
 
 <svelte:head>
@@ -155,9 +163,9 @@
         <Row>
             <Col xs="12" class="d-flex">
                 <PostcardFill
-                    class={$licenseValid ? "" : "text-secondary"}
+                    class={$license.Active ? "" : "text-secondary"}
                     style={"min-width:4em;min-height:4em;" +
-                        ($licenseValid ? "color: rgb(58 77 135);" : "")}
+                        ($license.Active ? "color: rgb(58 77 135);" : "")}
                 />
                 <div class="mx-2">
                     <h4 class="mb-0">
@@ -168,13 +176,13 @@
                                 Unnamed license
                             </span>
                         {/if}
-                        {#if $license.ValidUntil !== null && $license.ValidUntil < new Date()}
+                        {#if !$license.Active}
                             <Badge
                                 class="align-middle"
                                 style="font-size:small;"
                                 color="secondary"
                             >
-                                Expired
+                                Inactive
                             </Badge>
                         {/if}
                     </h4>
@@ -182,7 +190,9 @@
                         {#each $license.Tags as tag}
                             <Badge
                                 class="me-1"
-                                color={$licenseValid ? "primary" : "secondary"}
+                                color={$license.Active
+                                    ? "primary"
+                                    : "secondary"}
                                 pill
                             >
                                 {tag}
@@ -193,7 +203,7 @@
                 <div class="flex-grow-1 text-end">
                     <ButtonDropdown>
                         <Button
-                            color={$licenseValid ? "primary" : "secondary"}
+                            color={$license.Active ? "primary" : "secondary"}
                             class="text-nowrap"
                             on:click={toggleLicenseModal}
                             outline
@@ -202,7 +212,7 @@
                         </Button>
                         <DropdownToggle
                             split
-                            color={$licenseValid ? "primary" : "secondary"}
+                            color={$license.Active ? "primary" : "secondary"}
                             outline
                         />
                         <DropdownMenu end>
@@ -212,7 +222,7 @@
                         </DropdownMenu>
                     </ButtonDropdown>
                     <Button
-                        color="primary"
+                        color={$license.Active ? "primary" : "secondary"}
                         class="d-none d-sm-inline"
                         on:click={toggleViewKey}
                     >
@@ -220,11 +230,25 @@
                     </Button>
                 </div>
             </Col>
-            <Col xs="12" sm="5" md="4" lg="3" class="mt-2 pe-sm-1">
+            <Col xs="12" lg="5" class="mt-2 pe-lg-1">
                 <div class="p-2 border rounded-3 h-100">
                     <h4>Info</h4>
+                    <div class="mb-1 d-flex">
+                        <div class="me-1">
+                            <CardText />
+                        </div>
+                        {#if $license.Note !== ""}
+                            <span>
+                                {$license.Note}
+                            </span>
+                        {:else}
+                            <span class="text-secondary fst-italic">
+                                No note
+                            </span>
+                        {/if}
+                    </div>
                     {#if $license.EndUserEmail !== ""}
-                        <div class="mb-1">
+                        <div class="mb-2">
                             <Envelope />
                             <a
                                 href={`mailto:${$license.EndUserEmail}`}
@@ -242,6 +266,11 @@
                                 <HourglassSplit class="me-1" />
                             {/if}
                             {$license.ValidUntil.toLocaleString(getLang())}
+                            {#if $license.ValidUntil < new Date()}
+                                <Badge class="ms-1" color="secondary">
+                                    Expired
+                                </Badge>
+                            {/if}
                         {:else}
                             <HourglassTop class="me-1" />
                             <Badge color="success">No expiry</Badge>
@@ -249,22 +278,11 @@
                     </div>
                 </div>
             </Col>
-            <Col xs="12" sm="7" md="8" lg="4" class="mt-2 ps-sm-1 pe-lg-1">
-                <div class="p-2 border rounded-3 h-100">
-                    <h4>Note</h4>
-                    {#if $license.Note !== ""}
-                        <span>
-                            {$license.Note}
-                        </span>
-                    {:else}
-                        <span class="text-secondary fst-italic">No note</span>
-                    {/if}
-                </div>
-            </Col>
-            <Col xs="12" sm="12" lg="5" class="mt-2 ps-lg-1">
+            <Col xs="12" lg="7" class="mt-2 ps-lg-1">
                 <div class="p-2 border rounded-3 h-100">
                     <h4>Data</h4>
-                    <span class="text-danger">TODO</span>
+                    <CustomDataView data={parseLicenseFields($license.Data)} />
+                    <!-- <span class="text-danger">TODO</span> -->
                 </div>
             </Col>
             <Col xs="12" class="d-block d-sm-none mt-2">
@@ -407,9 +425,11 @@
             <Button color="secondary" outline on:click={toggleViewKey}>
                 Close
             </Button>
-            <Button id="btn-copy" color="primary" on:click={onClickCopy}>
-                {copied ? "Copied!" : "Copy"}
-            </Button>
+            {#if navigator.clipboard !== undefined}
+                <Button id="btn-copy" color="primary" on:click={onClickCopy}>
+                    {copied ? "Copied!" : "Copy"}
+                </Button>
+            {/if}
         </ModalFooter>
     </Modal>
     <LicenseSessionView
@@ -420,9 +440,16 @@
         toggle={toggleViewSession}
         on:terminate={onTerminate}
     />
-    <LicenseModal edit isOpen={licenseModal} toggle={toggleLicenseModal} />
-    <LicenseDelete
+    <LicenseModal
+        edit
+        isOpen={licenseModal}
+        toggle={toggleLicenseModal}
+        {productID}
+    />
+    <DeleteModal
         isOpen={licenseDeleteModal}
         toggle={toggleLicenseDeleteModal}
+        navigateTo={`/license-issuers/${$licenseIssuer.ID}/products/${$product.ID}`}
+        {onDelete}
     />
 </Container>

@@ -18,16 +18,3 @@
 </svelte:head>
 
 <h6 />
-
-<!-- <Container md>
-    <Row>
-        <HomeItem to={`/license-issuers/${$issuerID}`} {focus}>
-            <h4 slot="title">My licenses</h4>
-        </HomeItem>
-        {#if $isPrivileged}
-            <HomeItem to="/license-issuers">
-                <h4 slot="title">License issuers</h4>
-            </HomeItem>
-        {/if}
-    </Row>
-</Container> -->

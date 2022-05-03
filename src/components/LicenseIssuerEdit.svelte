@@ -34,7 +34,9 @@
         username.reset($licenseIssuer.Username);
         email.reset($licenseIssuer.Email);
         phoneNumber.reset($licenseIssuer.PhoneNumber);
-        maxLicenses.reset($licenseIssuer.MaxLicenses ? NaN : 1);
+        maxLicenses.reset(
+            $licenseIssuer.MaxLicenses > 0 ? $licenseIssuer.MaxLicenses : 1
+        );
         maxLicensesUnlimited.reset($licenseIssuer.MaxLicenses <= 0);
         usernameInput?.focus();
     }

@@ -1,7 +1,5 @@
 <script lang="ts">
     import { navigate } from "svelte-navigator";
-    import { deleteLicenseIssuer } from "../util/licenseIssuer";
-    import { licenseIssuer } from "../util/state";
     import {
         Button,
         Modal,
@@ -10,32 +8,42 @@
         Spinner,
     } from "sveltestrap";
 
-    export let isOpen: boolean;
-    export let toggle: () => void;
+    export let isOpen: boolean = false;
+    export let toggle: () => void = () => {
+        isOpen = !isOpen;
+    };
+    export let onDelete: () => Promise<boolean>;
+    export let navigateTo: string = "/";
 
     let loading = false;
+    let deleted = false;
 
-    const onDelete = async (event: MouseEvent) => {
+    const onClickDelete = async (event: MouseEvent) => {
         event.preventDefault();
         try {
             loading = true;
-            const ok = await deleteLicenseIssuer($licenseIssuer.ID);
-            if (!ok) {
-                return;
+            const ok = await onDelete();
+            if (ok) {
+                deleted = true;
             }
-            toggle();
-            navigate("/license-issuers");
         } finally {
             loading = false;
         }
     };
+
+    const onClose = (e?: Event) => {
+        e?.preventDefault();
+        if (deleted) {
+            navigate(navigateTo);
+        }
+    };
 </script>
 
-<Modal {isOpen} {toggle} scrollable>
+<Modal isOpen={isOpen && !deleted} {toggle} on:close={onClose} scrollable>
     <ModalHeader {toggle}>Are you sure you want to delete?</ModalHeader>
     <ModalFooter>
         <Button color="secondary" outline on:click={toggle}>Cancel</Button>
-        <Button color="danger" disabled={loading} on:click={onDelete}>
+        <Button color="danger" disabled={loading} on:click={onClickDelete}>
             {#if loading}
                 <Spinner size="sm" role="status" />
             {/if}

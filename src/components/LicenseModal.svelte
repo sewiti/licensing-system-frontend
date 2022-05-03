@@ -1,7 +1,7 @@
 <script lang="ts">
     import { writable } from "svelte/store";
     import { newField, validate } from "../util/field";
-    import { license, licenseIssuer } from "../util/state";
+    import { license, licenseIssuer, product } from "../util/state";
     import { addDays, formatDatetime, nextMidnight } from "../util/datetime";
     import DataField from "./DataField.svelte";
     import { navigate } from "svelte-navigator";
@@ -41,6 +41,8 @@
         parseTags,
     } from "../util/license";
 
+    export let productID: number = -1;
+
     export let edit: boolean = false;
 
     export let isOpen: boolean;
@@ -57,6 +59,7 @@
             : [];
         parsedFields = parsedLicenseFields !== null;
 
+        active.reset(edit ? $license.Active : undefined);
         name.reset(edit ? $license.Name : undefined);
         note.reset(edit ? $license.Note : undefined);
         maxSessions.reset(edit ? $license.MaxSessions : undefined);
@@ -89,6 +92,7 @@
     let loading = false;
     const errorMsg = writable("");
 
+    const active = newField(true);
     const name = newField("", licenseNameValidator);
     const tags = newField("", licenseTagsValidator);
     const endUserEmail = newField("", emailValidator);
@@ -124,6 +128,7 @@
             errorMsg.set("");
 
             const { values, ok } = validate({
+                active,
                 name,
                 tags,
                 endUserEmail,
@@ -139,6 +144,7 @@
             const uploadData = parsedFields || (values.fields || []).length > 0;
 
             const reqFields = {
+                active: values.active,
                 name: values.name,
                 tags: parseTags(values.tags),
                 endUserEmail: values.endUserEmail,
@@ -150,6 +156,7 @@
                 data: uploadData
                     ? formatLicenseFields(values.fields)
                     : undefined,
+                productID: productID < 0 ? null : productID,
             };
 
             const { license: l, status } = edit
@@ -169,7 +176,7 @@
             } else {
                 const _licenseID = urlBase64(l.ID);
                 navigate(
-                    `/license-issuers/${$licenseIssuer.ID}/licenses/${_licenseID}`
+                    `/license-issuers/${$licenseIssuer.ID}/products/${$product.ID}/licenses/${_licenseID}`
                 );
             }
         } finally {
@@ -393,6 +400,17 @@
                         Add field
                     </a>
                 </div>
+            </FormGroup>
+            <FormGroup>
+                <Input
+                    id="active"
+                    name="active"
+                    type="switch"
+                    label="Active"
+                    bind:checked={$active.value}
+                >
+                    Active
+                </Input>
             </FormGroup>
             {#if $errorMsg !== ""}
                 <div class="text-danger mt-1" style="font-size: .875em">

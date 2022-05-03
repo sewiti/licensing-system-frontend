@@ -8,6 +8,10 @@ import { LicenseDataField, parseTags } from "./license";
 
 export const usernameValidator = string()
     .required("Username is required")
+    .matches(
+        /^[A-Za-z0-9_-]+$/,
+        "Username can only contain letters, numbers, _ or - characters"
+    )
     .min(3, (v) => `Username must be at least ${v.min} characters`)
     .max(64, (v) => `Username must be at most ${v.max} characters`);
 
@@ -128,6 +132,11 @@ export const phoneNumberValidator = string()
     .max(24, (v) => `Phone number must be at most ${v.max} characters`);
 
 export const licenseNameValidator = string().max(
+    64,
+    (v) => `Name must be at most ${v.max} characters`
+);
+
+export const productNameValidator = string().max(
     64,
     (v) => `Name must be at most ${v.max} characters`
 );
