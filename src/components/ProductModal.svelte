@@ -76,7 +76,12 @@
     const addField = (event?: Event) => {
         event?.preventDefault();
         fields.update((v) => {
-            v.value = [...v.value, <LicenseDataField>{}];
+            v.value = [
+                ...v.value,
+                <LicenseDataField>{
+                    _id: Math.random(),
+                },
+            ];
             return v;
         });
     };
@@ -212,7 +217,7 @@
                         </Tooltip>
                     {/if}
                 </Label>
-                {#each $fields.value || [] as f, i}
+                {#each $fields.value || [] as f, i (f._id)}
                     <DataField
                         bind:field={f.field}
                         bind:value={f.value}
@@ -232,7 +237,12 @@
                     </div>
                 {/if}
                 <div>
-                    <a href="/" class="link-primary mt-1" on:click={addField}>
+                    <a
+                        href="/"
+                        id="add-field"
+                        class="link-primary mt-1"
+                        on:click={addField}
+                    >
                         Add field
                     </a>
                 </div>
@@ -258,8 +268,11 @@
         </Form>
     </div>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button id="cancel-product" color="secondary" outline on:click={toggle}>
+            Cancel
+        </Button>
         <Button
+            id="save-product"
             color="primary"
             type="submit"
             disabled={loading}

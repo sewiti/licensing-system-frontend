@@ -148,6 +148,7 @@
                     <ButtonDropdown>
                         <span id="edit-license-issuer-wrapper">
                             <Button
+                                id="edit-issuer"
                                 color={$licenseIssuer.Active
                                     ? "primary"
                                     : "secondary"}
@@ -170,6 +171,7 @@
                             </Tooltip>
                         {/if}
                         <DropdownToggle
+                            id="issuer-dropdown"
                             split
                             color={$licenseIssuer.Active
                                 ? "primary"
@@ -177,11 +179,15 @@
                             outline
                         />
                         <DropdownMenu end>
-                            <DropdownItem on:click={toggleChpasswdModal}>
+                            <DropdownItem
+                                id="change-passwd"
+                                on:click={toggleChpasswdModal}
+                            >
                                 Change password
                             </DropdownItem>
                             <div id="delete-license-issuer-wrapper">
                                 <DropdownItem
+                                    id="delete-issuer"
                                     disabled={$licenseIssuer.ID === 0}
                                     on:click={toggleDeleteModal}
                                 >
@@ -268,6 +274,7 @@
                     use:focus
                 />
                 <Button
+                    id="new-product"
                     color="primary"
                     class="d-none d-sm-block text-nowrap"
                     on:click={toggleLicenseModal}
@@ -275,6 +282,7 @@
                     New product
                 </Button>
                 <Button
+                    id="new-product-plus"
                     color="primary"
                     class="d-sm-none"
                     on:click={toggleLicenseModal}

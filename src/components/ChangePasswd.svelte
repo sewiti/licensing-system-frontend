@@ -109,7 +109,7 @@
 <Modal {isOpen} {toggle} backdrop="static" scrollable>
     <ModalHeader {toggle}>Change password</ModalHeader>
     <ModalBody>
-        <Form id="change-passwd" on:submit={onSubmit}>
+        <Form id="change-passwd-form" on:submit={onSubmit}>
             {#if !$isPrivileged}
                 <FormGroup>
                     <Label for="oldPasswd">Current password</Label>
@@ -193,11 +193,14 @@
         </Form>
     </ModalBody>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button id="cancel-passwd" color="secondary" outline on:click={toggle}>
+            Cancel
+        </Button>
         <Button
+            id="save-passwd"
             color="primary"
             type="submit"
-            form="change-passwd"
+            form="change-passwd-form"
             disabled={loading}
         >
             {#if loading}

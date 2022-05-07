@@ -36,10 +36,10 @@
     };
 </script>
 
-<Row class="mb-2">
+<Row class="data-field mb-2">
     <Col xs="4" class="pe-1">
         <input
-            class="form-control"
+            class="data-field-key form-control"
             placeholder="Field"
             type="text"
             bind:value={field}
@@ -49,16 +49,27 @@
 
     <Col xs="4" class="ps-0 pe-1">
         {#if type === "string"}
-            <Input bind:value={textValue} placeholder="Value" type="text" />
+            <Input
+                bind:value={textValue}
+                class="data-field-value-text"
+                placeholder="Value"
+                type="text"
+            />
         {:else if type === "number"}
             <Input
                 bind:value={numberValue}
+                class="data-field-value-number"
                 placeholder="Value"
                 type="number"
                 step="0.001"
             />
         {:else if type === "boolean"}
-            <Input bind:value={boolValue} placeholder="Value" type="select">
+            <Input
+                bind:value={boolValue}
+                class="data-field-value-bool"
+                placeholder="Value"
+                type="select"
+            >
                 <option value="true">true</option>
                 <option value="false">false</option>
             </Input>
@@ -68,14 +79,19 @@
     <Col xs="4" class="ps-0 d-flex">
         <Input
             bind:value={type}
-            class="me-1 flex-grow-1 bg-light"
+            class="data-field-type me-1 flex-grow-1 bg-light"
             type="select"
         >
             <option value="string" selected>String</option>
             <option value="number">Number</option>
             <option value="boolean">Boolean</option>
         </Input>
-        <Button color="danger" outline on:click={onDelete}>
+        <Button
+            class="data-field-delete"
+            color="danger"
+            outline
+            on:click={onDelete}
+        >
             <Trash />
         </Button>
     </Col>

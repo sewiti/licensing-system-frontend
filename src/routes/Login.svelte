@@ -131,6 +131,7 @@
                         </FormGroup>
 
                         <Button
+                            id="login"
                             type="submit"
                             color="primary"
                             block

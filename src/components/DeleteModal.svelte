@@ -42,8 +42,15 @@
 <Modal isOpen={isOpen && !deleted} {toggle} on:close={onClose} scrollable>
     <ModalHeader {toggle}>Are you sure you want to delete?</ModalHeader>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
-        <Button color="danger" disabled={loading} on:click={onClickDelete}>
+        <Button id="cancel-delete" color="secondary" outline on:click={toggle}>
+            Cancel
+        </Button>
+        <Button
+            id="confirm-delete"
+            color="danger"
+            disabled={loading}
+            on:click={onClickDelete}
+        >
             {#if loading}
                 <Spinner size="sm" role="status" />
             {/if}

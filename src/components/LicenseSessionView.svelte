@@ -131,10 +131,17 @@
         </Loader>
     </ModalBody>
     <ModalFooter class="justify-content-between">
-        <Button color="danger" outline on:click={toggleTerminate}>
+        <Button
+            id="terminate-session"
+            color="danger"
+            outline
+            on:click={toggleTerminate}
+        >
             Terminate
         </Button>
-        <Button color="secondary" outline on:click={toggle}>Close</Button>
+        <Button id="close-session" color="secondary" outline on:click={toggle}>
+            Close
+        </Button>
     </ModalFooter>
 </Modal>
 <Modal isOpen={isOpenTerminate} toggle={toggleTerminate} scrollable>
@@ -142,10 +149,20 @@
         Are you sure you want to terminate?
     </ModalHeader>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggleTerminate}>
+        <Button
+            id="cancel-terminate"
+            color="secondary"
+            outline
+            on:click={toggleTerminate}
+        >
             Cancel
         </Button>
-        <Button color="danger" disabled={loadingAction} on:click={onTerminate}>
+        <Button
+            id="confirm-terminate"
+            color="danger"
+            disabled={loadingAction}
+            on:click={onTerminate}
+        >
             {#if loadingAction}
                 <Spinner size="sm" role="status" />
             {/if}

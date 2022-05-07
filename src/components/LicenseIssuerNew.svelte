@@ -265,8 +265,11 @@
         </Form>
     </ModalBody>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button id="cancel-issuer" color="secondary" outline on:click={toggle}>
+            Cancel
+        </Button>
         <Button
+            id="create-issuer"
             color="primary"
             type="submit"
             form="license-issuer-new"

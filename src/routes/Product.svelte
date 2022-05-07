@@ -193,6 +193,7 @@
                     <ButtonDropdown>
                         <div id="edit-product-btn">
                             <Button
+                                id="edit-product"
                                 color={$product.Active
                                     ? "primary"
                                     : "secondary"}
@@ -206,6 +207,7 @@
                             </Button>
                         </div>
                         <DropdownToggle
+                            id="product-dropdown"
                             split
                             color={$product.Active ? "primary" : "secondary"}
                             outline
@@ -213,6 +215,7 @@
                         <DropdownMenu end>
                             <div id="delete-product-btn">
                                 <DropdownItem
+                                    id="delete-product"
                                     disabled={$product.ID < 0}
                                     on:click={toggleDeleteModal}
                                 >
@@ -300,6 +303,7 @@
                 />
                 <div id="new-license-btn">
                     <Button
+                        id="new-license"
                         color="primary"
                         class="d-none d-sm-block text-nowrap"
                         disabled={limitReached}

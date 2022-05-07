@@ -169,6 +169,7 @@ export const formatTags = (tags: string[]): string => {
 };
 
 export type LicenseDataField = {
+    _id: number; // for use in listviews
     field: string;
     value: string | number | boolean;
 };
@@ -180,6 +181,7 @@ export const parseLicenseFields = (data: string): LicenseDataField[] => {
         const ls = kv.map(
             (v) =>
                 <LicenseDataField>{
+                    _id: Math.random(),
                     field: v[0],
                     value: v[1],
                 }

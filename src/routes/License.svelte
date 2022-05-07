@@ -203,6 +203,7 @@
                 <div class="flex-grow-1 text-end">
                     <ButtonDropdown>
                         <Button
+                            id="edit-license"
                             color={$license.Active ? "primary" : "secondary"}
                             class="text-nowrap"
                             on:click={toggleLicenseModal}
@@ -211,17 +212,22 @@
                             Edit license
                         </Button>
                         <DropdownToggle
+                            id="license-dropdown"
                             split
                             color={$license.Active ? "primary" : "secondary"}
                             outline
                         />
                         <DropdownMenu end>
-                            <DropdownItem on:click={toggleLicenseDeleteModal}>
+                            <DropdownItem
+                                id="delete-license"
+                                on:click={toggleLicenseDeleteModal}
+                            >
                                 Delete license
                             </DropdownItem>
                         </DropdownMenu>
                     </ButtonDropdown>
                     <Button
+                        id="view-key"
                         color={$license.Active ? "primary" : "secondary"}
                         class="d-none d-sm-inline"
                         on:click={toggleViewKey}
@@ -286,7 +292,12 @@
                 </div>
             </Col>
             <Col xs="12" class="d-block d-sm-none mt-2">
-                <Button color="primary" class="w-100" on:click={toggleViewKey}>
+                <Button
+                    id="view-key-2"
+                    color="primary"
+                    class="w-100"
+                    on:click={toggleViewKey}
+                >
                     View key
                 </Button>
             </Col>
@@ -422,7 +433,12 @@
             </FormGroup>
         </ModalBody>
         <ModalFooter>
-            <Button color="secondary" outline on:click={toggleViewKey}>
+            <Button
+                id="close-key-view"
+                color="secondary"
+                outline
+                on:click={toggleViewKey}
+            >
                 Close
             </Button>
             {#if navigator.clipboard !== undefined}

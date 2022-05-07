@@ -270,8 +270,11 @@
         </Form>
     </ModalBody>
     <ModalFooter>
-        <Button color="secondary" outline on:click={toggle}>Cancel</Button>
+        <Button id="cancel-edit" color="secondary" outline on:click={toggle}>
+            Cancel
+        </Button>
         <Button
+            id="save-edit"
             color="primary"
             type="submit"
             form="license-issuer-edit"

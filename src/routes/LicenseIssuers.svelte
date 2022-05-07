@@ -89,6 +89,7 @@
                     use:focus
                 />
                 <Button
+                    id="new-issuer"
                     color="primary"
                     class="d-none d-sm-block text-nowrap"
                     on:click={toggleCreateModal}
@@ -96,6 +97,7 @@
                     New issuer
                 </Button>
                 <Button
+                    id="new-issuer-plus"
                     color="primary"
                     class="d-sm-none"
                     on:click={toggleCreateModal}
@@ -104,22 +106,6 @@
                 </Button>
             </Col>
         </Row>
-
-        <!-- <Row>
-            <Col class="mt-1 mb-2">
-                <InputGroup>
-                    <input
-                        class="form-control"
-                        placeholder="Search"
-                        bind:value={search}
-                        use:focus
-                    />
-                    <Button color="primary" on:click={toggleCreateModal}>
-                        New issuer
-                    </Button>
-                </InputGroup>
-            </Col>
-        </Row> -->
 
         <Container md>
             <Row class="mt-1 py-1 border-bottom border-2">
