@@ -7,6 +7,7 @@
         ModalHeader,
         Spinner,
     } from "sveltestrap";
+    import { modalFade } from "../util/const";
 
     export let isOpen: boolean = false;
     export let toggle: () => void = () => {
@@ -39,7 +40,13 @@
     };
 </script>
 
-<Modal isOpen={isOpen && !deleted} {toggle} on:close={onClose} scrollable>
+<Modal
+    isOpen={isOpen && !deleted}
+    {toggle}
+    on:close={onClose}
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader {toggle}>Are you sure you want to delete?</ModalHeader>
     <ModalFooter>
         <Button id="cancel-delete" color="secondary" outline on:click={toggle}>

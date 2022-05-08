@@ -19,6 +19,7 @@
         passwordConfirmValidator,
         passwordValidator,
     } from "../util/validator";
+    import { modalFade } from "../util/const";
 
     export let username: Readable<string>;
 
@@ -106,7 +107,7 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" scrollable>
+<Modal {isOpen} {toggle} backdrop="static" scrollable fade={modalFade}>
     <ModalHeader {toggle}>Change password</ModalHeader>
     <ModalBody>
         <Form id="change-passwd-form" on:submit={onSubmit}>

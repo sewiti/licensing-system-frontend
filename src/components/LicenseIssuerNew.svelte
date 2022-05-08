@@ -24,6 +24,7 @@
         phoneNumberValidator,
         usernameValidator,
     } from "../util/validator";
+    import { modalFade } from "../util/const";
 
     export let isOpen: boolean;
     export let toggle: () => void;
@@ -116,7 +117,14 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+<Modal
+    {isOpen}
+    {toggle}
+    backdrop="static"
+    fullscreen="sm"
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader {toggle}>Create license issuer</ModalHeader>
     <ModalBody>
         <Form id="license-issuer-new" on:submit={onSubmit}>

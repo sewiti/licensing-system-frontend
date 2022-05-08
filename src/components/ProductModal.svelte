@@ -42,6 +42,7 @@
         parseTags,
     } from "../util/license";
     import { createProduct, updateProduct } from "../util/product";
+    import { modalFade } from "../util/const";
 
     export let edit: boolean = false;
 
@@ -146,7 +147,14 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+<Modal
+    {isOpen}
+    {toggle}
+    backdrop="static"
+    fullscreen="sm"
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader {toggle}>{edit ? "Edit" : "Create"} product</ModalHeader>
     <div class="modal-body" bind:this={modalBody}>
         <Form id="productForm" on:submit={onSubmit}>

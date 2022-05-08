@@ -40,6 +40,7 @@
         formatLicenseFields,
         parseTags,
     } from "../util/license";
+    import { modalFade } from "../util/const";
 
     export let productID: number = -1;
 
@@ -190,7 +191,14 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+<Modal
+    {isOpen}
+    {toggle}
+    backdrop="static"
+    fullscreen="sm"
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader {toggle}>{edit ? "Edit" : "Create"} license</ModalHeader>
     <div class="modal-body" bind:this={modalBody}>
         <Form id="licenseForm" on:submit={onSubmit}>

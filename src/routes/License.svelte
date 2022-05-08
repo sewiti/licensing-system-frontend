@@ -43,7 +43,7 @@
     import PageControl from "../components/PageControl.svelte";
     import { useFocus } from "svelte-navigator";
     import LicenseSessionRow from "../components/LicenseSessionRow.svelte";
-    import { brand } from "../util/const";
+    import { brand, modalFade } from "../util/const";
     import { fetchProduct } from "../util/product";
     import CustomDataView from "../components/CustomDataView.svelte";
     import DeleteModal from "../components/DeleteModal.svelte";
@@ -288,7 +288,6 @@
                 <div class="p-2 border rounded-3 h-100">
                     <h4>Data</h4>
                     <CustomDataView data={parseLicenseFields($license.Data)} />
-                    <!-- <span class="text-danger">TODO</span> -->
                 </div>
             </Col>
             <Col xs="12" class="d-block d-sm-none mt-2">
@@ -328,23 +327,6 @@
                 />
             </Col>
         </Row>
-        <!-- <div class="mt-3 mb-1 d-flex align-items-end justify-content-between">
-            <h4 class="mb-0">Active license sessions</h4>
-            
-        </div> -->
-
-        <!-- <Row>
-            <Col class="my-2">
-                <InputGroup>
-                    <input
-                        class="form-control"
-                        placeholder="Search"
-                        bind:value={search}
-                        use:focus
-                    />
-                </InputGroup>
-            </Col>
-        </Row> -->
         <Container md>
             <Row class="mt-1 py-1 border-bottom border-2">
                 <Col xs="5" sm="6" class="fw-bolder">Identifier</Col>
@@ -374,52 +356,13 @@
                 </Col>
             </Row>
         {/if}
-
-        <!-- <Table striped hover class="align-middle">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Identifier</th>
-                    <th>Expires</th>
-                    <th>Created</th>
-                </tr>
-            </thead>
-            <tbody>
-                {#if licenseSessions.length === 0}
-                    <tr>
-                        <td colspan="5" class="text-center">
-                            <span class="text-secondary fst-italic">
-                                No license sessions
-                            </span>
-                        </td>
-                    </tr>
-                {:else}
-                    {#each licenseSessions as ls (ls.ClientID)}
-                        <tr
-                            class="clickable"
-                            on:click={() => onClickLicenseSession(ls.ClientID)}
-                        >
-                            <td class="font-monospace">
-                                {ls.ClientID.substring(0, 6)}
-                            </td>
-                            <td>
-                                {#if ls.Identifier !== ""}
-                                    {limString(ls.Identifier, 32)}
-                                {:else}
-                                    <span class="text-secondary fst-italic">
-                                        No identifier
-                                    </span>
-                                {/if}
-                            </td>
-                            <td>{ls.Expire.toLocaleString(getLang())}</td>
-                            <td>{ls.Created.toLocaleString(getLang())}</td>
-                        </tr>
-                    {/each}
-                {/if}
-            </tbody>
-        </Table> -->
     </Loader>
-    <Modal isOpen={isOpenViewKey} toggle={toggleViewKey} scrollable>
+    <Modal
+        isOpen={isOpenViewKey}
+        toggle={toggleViewKey}
+        scrollable
+        fade={modalFade}
+    >
         <ModalHeader toggle={toggleViewKey}>View license key</ModalHeader>
         <ModalBody>
             <FormGroup>

@@ -17,4 +17,4 @@
     <title>{brand}</title>
 </svelte:head>
 
-<h6 />
+<h6>&nbsp;</h6>
