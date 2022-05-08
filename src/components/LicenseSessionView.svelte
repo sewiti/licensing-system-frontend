@@ -12,6 +12,7 @@
         ModalHeader,
         Spinner,
     } from "sveltestrap";
+    import { modalFade } from "../util/const";
     import {
         deleteLicenseSession,
         fetchLicenseSession,
@@ -69,7 +70,7 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} fullscreen="sm" scrollable>
+<Modal {isOpen} {toggle} fullscreen="sm" scrollable fade={modalFade}>
     <ModalHeader {toggle}>License session</ModalHeader>
     <ModalBody>
         <Loader {loading}>
@@ -144,7 +145,12 @@
         </Button>
     </ModalFooter>
 </Modal>
-<Modal isOpen={isOpenTerminate} toggle={toggleTerminate} scrollable>
+<Modal
+    isOpen={isOpenTerminate}
+    toggle={toggleTerminate}
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader toggle={toggleTerminate}>
         Are you sure you want to terminate?
     </ModalHeader>

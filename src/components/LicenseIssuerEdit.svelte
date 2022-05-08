@@ -15,6 +15,7 @@
         Spinner,
     } from "sveltestrap";
     import { isPrivileged } from "../util/auth";
+    import { modalFade } from "../util/const";
     import { newField, validate } from "../util/field";
     import { editLicenseIssuer } from "../util/licenseIssuer";
     import { licenseIssuer } from "../util/state";
@@ -129,7 +130,14 @@
     };
 </script>
 
-<Modal {isOpen} {toggle} backdrop="static" fullscreen="sm" scrollable>
+<Modal
+    {isOpen}
+    {toggle}
+    backdrop="static"
+    fullscreen="sm"
+    scrollable
+    fade={modalFade}
+>
     <ModalHeader {toggle}>Edit license issuer</ModalHeader>
     <ModalBody>
         <Form id="license-issuer-edit" on:submit={onSubmit}>

@@ -47,11 +47,6 @@
         </Col>
     {:else}
         <Col xs="5" class="d-flex align-items-center overflow-auto">
-            <!-- <PostcardFill
-                class={licenseValid ? "" : "text-secondary"}
-                style={"min-height:1.4em;min-width:1.4em;" +
-                    (licenseValid ? "color:rgb(58 77 135);" : "")}
-            /> -->
             <PostcardFill
                 class={l.Active ? "" : "text-secondary"}
                 style={"min-height:1.4em;min-width:1.4em;" +
