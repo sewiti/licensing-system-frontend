@@ -34,6 +34,7 @@
     import ProductRow from "../components/ProductRow.svelte";
     import ProductModal from "../components/ProductModal.svelte";
     import DeleteModal from "../components/DeleteModal.svelte";
+    import { isPrivileged } from "../util/auth";
 
     export let licenseIssuerID: number;
     $: loadData(licenseIssuerID);
@@ -185,23 +186,25 @@
                             >
                                 Change password
                             </DropdownItem>
-                            <div id="delete-license-issuer-wrapper">
-                                <DropdownItem
-                                    id="delete-issuer"
-                                    disabled={$licenseIssuer.ID === 0}
-                                    on:click={toggleDeleteModal}
-                                >
-                                    Delete issuer
-                                </DropdownItem>
-                            </div>
-                            {#if $licenseIssuer.ID === 0}
-                                <Tooltip
-                                    target="delete-license-issuer-wrapper"
-                                    placement="left"
-                                    animation
-                                >
-                                    {$licenseIssuer.Username} is immutable
-                                </Tooltip>
+                            {#if $isPrivileged}
+                                <div id="delete-license-issuer-wrapper">
+                                    <DropdownItem
+                                        id="delete-issuer"
+                                        disabled={$licenseIssuer.ID === 0}
+                                        on:click={toggleDeleteModal}
+                                    >
+                                        Delete issuer
+                                    </DropdownItem>
+                                </div>
+                                {#if $licenseIssuer.ID === 0}
+                                    <Tooltip
+                                        target="delete-license-issuer-wrapper"
+                                        placement="left"
+                                        animation
+                                    >
+                                        {$licenseIssuer.Username} is immutable
+                                    </Tooltip>
+                                {/if}
                             {/if}
                         </DropdownMenu>
                     </ButtonDropdown>
